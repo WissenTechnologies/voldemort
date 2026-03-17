@@ -41,13 +41,30 @@ public class AuthController {
     @PostMapping("/register")
 public ResponseEntity<?> register(@RequestBody User user) {
 
+    // check duplicate email
     if(userRepository.findByEmail(user.getEmail()).isPresent()){
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body("Email already exists");
     }
 
+    // check duplicate username
+    if(userRepository.findByUsername(user.getUsername()).isPresent()){
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body("Username already exists");
+    }
+
+    // prevent admin registration
+    if(user.getRole() != null && user.getRole() == Role.ADMIN){
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body("Admin registration is not allowed");
+    }
+
     user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+    // force USER role
     user.setRole(Role.USER);
 
     userRepository.save(user);
