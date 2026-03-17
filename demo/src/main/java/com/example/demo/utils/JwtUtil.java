@@ -1,40 +1,62 @@
 package com.example.demo.utils;
 
-import java.util.Date;
-
-import org.springframework.stereotype.Component;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
+import org.springframework.stereotype.Component;
+
+import java.security.Key;
+import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    private String SECRET = "mySuperSecretKeyThatIsAtLeast32CharactersLong";
+    private final String SECRET = "mySuperSecretKeyThatIsAtLeast32CharactersLong";
 
-    public String generateToken(String email){
+    // create signing key
+    private Key getSignKey() {
+        return Keys.hmacShaKeyFor(SECRET.getBytes());
+    }
+
+    // generate JWT token
+    public String generateToken(String email, String role) {
 
         return Jwts.builder()
                 .setSubject(email)
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(SignatureAlgorithm.HS256, SECRET)
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String extractEmail(String token){
+    // extract email
+    public String extractEmail(String token) {
         return extractClaims(token).getSubject();
     }
 
-    public boolean validateToken(String token, String email){
-        return extractEmail(token).equals(email);
+    // extract role
+    public String extractRole(String token) {
+        return extractClaims(token).get("role", String.class);
     }
 
-    private Claims extractClaims(String token){
-        return Jwts.parser()
-                .setSigningKey(SECRET)
+    // extract claims
+    private Claims extractClaims(String token) {
+
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    // validate token
+    public boolean validateToken(String token, String email) {
+
+        String extractedEmail = extractEmail(token);
+
+        return extractedEmail.equals(email);
     }
 }

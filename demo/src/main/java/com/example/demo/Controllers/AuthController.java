@@ -1,15 +1,21 @@
 package com.example.demo.Controllers;
 
+
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.Entities.Role;
 import com.example.demo.Entities.User;
 import com.example.demo.Repository.AuthRepo;
 import com.example.demo.dto.LoginRequest;
@@ -17,6 +23,7 @@ import com.example.demo.utils.JwtUtil;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin("*")
 public class AuthController {
 
     @Autowired
@@ -32,32 +39,52 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
+public ResponseEntity<?> register(@RequestBody User user) {
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        userRepository.save(user);
-
-        return "User Registered Successfully";
+    if(userRepository.findByEmail(user.getEmail()).isPresent()){
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body("Email already exists");
     }
 
-    @PostMapping("/login")
-public String login(@RequestBody LoginRequest request) {
+    user.setPassword(passwordEncoder.encode(user.getPassword()));
+    user.setRole(Role.USER);
 
-    Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                    request.getEmail(),
-                    request.getPassword()
-            )
-    );
+    userRepository.save(user);
 
-    if(authentication.isAuthenticated()){
+    return ResponseEntity.ok("User Registered Successfully");
+}
 
-        String token = jwtUtil.generateToken(request.getEmail());
+@PostMapping("/login")
+public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
-        return token;
+    try {
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
+        if(authentication.isAuthenticated()){
+
+            User user = userRepository.findByEmail(request.getEmail()).get();
+
+            String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+
+            return ResponseEntity.ok(token);
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Login Failed");
+
+    } catch (Exception e) {
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Invalid Email or Password");
     }
-
-    return "Login Failed";
 }
 }
