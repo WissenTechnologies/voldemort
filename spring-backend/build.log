@@ -1,0 +1,75 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< com.example:auth-backend >----------------------
+[INFO] Building auth-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.0:clean (default-clean) @ auth-backend ---
+[INFO] Deleting C:\Users\Wissen\Documents\voldemort\spring-backend\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ auth-backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ auth-backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 22 source files with javac [debug parameters release 17] to target\classes
+[INFO] Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/Wissen/Documents/voldemort/spring-backend/src/main/java/com/example/auth/security/jwt/JwtUtils.java:[31,17] no suitable method found for signWith(java.security.Key,io.jsonwebtoken.security.MacAlgorithm)
+    method io.jsonwebtoken.JwtBuilder.signWith(io.jsonwebtoken.SignatureAlgorithm,byte[]) is not applicable
+      (argument mismatch; java.security.Key cannot be converted to io.jsonwebtoken.SignatureAlgorithm)
+    method io.jsonwebtoken.JwtBuilder.signWith(io.jsonwebtoken.SignatureAlgorithm,java.lang.String) is not applicable
+      (argument mismatch; java.security.Key cannot be converted to io.jsonwebtoken.SignatureAlgorithm)
+    method io.jsonwebtoken.JwtBuilder.signWith(io.jsonwebtoken.SignatureAlgorithm,java.security.Key) is not applicable
+      (argument mismatch; java.security.Key cannot be converted to io.jsonwebtoken.SignatureAlgorithm)
+    method io.jsonwebtoken.JwtBuilder.signWith(java.security.Key,io.jsonwebtoken.SignatureAlgorithm) is not applicable
+      (argument mismatch; io.jsonwebtoken.security.MacAlgorithm cannot be converted to io.jsonwebtoken.SignatureAlgorithm)
+    method io.jsonwebtoken.JwtBuilder.<K>signWith(K,io.jsonwebtoken.security.SecureDigestAlgorithm<? super K,?>) is not applicable
+      (inference variable K has incompatible bounds
+        lower bounds: javax.crypto.SecretKey,java.security.Key
+        lower bounds: java.security.Key)
+[ERROR] /C:/Users/Wissen/Documents/voldemort/spring-backend/src/main/java/org/example/Main.java:[9,9] cannot find symbol
+  symbol:   variable IO
+  location: class org.example.Main
+[ERROR] /C:/Users/Wissen/Documents/voldemort/spring-backend/src/main/java/org/example/Main.java:[14,13] cannot find symbol
+  symbol:   variable IO
+  location: class org.example.Main
+[INFO] 3 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  16.127 s
+[INFO] Finished at: 2026-03-17T12:16:59+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project auth-backend: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/Wissen/Documents/voldemort/spring-backend/src/main/java/com/example/auth/security/jwt/JwtUtils.java:[31,17] no suitable method found for signWith(java.security.Key,io.jsonwebtoken.security.MacAlgorithm)
+[ERROR]     method io.jsonwebtoken.JwtBuilder.signWith(io.jsonwebtoken.SignatureAlgorithm,byte[]) is not applicable
+[ERROR]       (argument mismatch; java.security.Key cannot be converted to io.jsonwebtoken.SignatureAlgorithm)
+[ERROR]     method io.jsonwebtoken.JwtBuilder.signWith(io.jsonwebtoken.SignatureAlgorithm,java.lang.String) is not applicable
+[ERROR]       (argument mismatch; java.security.Key cannot be converted to io.jsonwebtoken.SignatureAlgorithm)
+[ERROR]     method io.jsonwebtoken.JwtBuilder.signWith(io.jsonwebtoken.SignatureAlgorithm,java.security.Key) is not applicable
+[ERROR]       (argument mismatch; java.security.Key cannot be converted to io.jsonwebtoken.SignatureAlgorithm)
+[ERROR]     method io.jsonwebtoken.JwtBuilder.signWith(java.security.Key,io.jsonwebtoken.SignatureAlgorithm) is not applicable
+[ERROR]       (argument mismatch; io.jsonwebtoken.security.MacAlgorithm cannot be converted to io.jsonwebtoken.SignatureAlgorithm)
+[ERROR]     method io.jsonwebtoken.JwtBuilder.<K>signWith(K,io.jsonwebtoken.security.SecureDigestAlgorithm<? super K,?>) is not applicable
+[ERROR]       (inference variable K has incompatible bounds
+[ERROR]         lower bounds: javax.crypto.SecretKey,java.security.Key
+[ERROR]         lower bounds: java.security.Key)
+[ERROR] /C:/Users/Wissen/Documents/voldemort/spring-backend/src/main/java/org/example/Main.java:[9,9] cannot find symbol
+[ERROR]   symbol:   variable IO
+[ERROR]   location: class org.example.Main
+[ERROR] /C:/Users/Wissen/Documents/voldemort/spring-backend/src/main/java/org/example/Main.java:[14,13] cannot find symbol
+[ERROR]   symbol:   variable IO
+[ERROR]   location: class org.example.Main
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
