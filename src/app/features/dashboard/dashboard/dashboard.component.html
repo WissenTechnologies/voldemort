@@ -1,0 +1,314 @@
+<div class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex overflow-hidden">
+
+  <!-- Mobile Sidebar Overlay -->
+  <div *ngIf="isSidebarOpen"
+       class="fixed inset-0 bg-black/80 z-20 lg:hidden"
+       (click)="toggleSidebar()">
+  </div>
+
+  <!-- Sidebar - Fixed on desktop, sliding on mobile -->
+  <aside
+    class="fixed inset-y-0 left-0 w-72 glass-darker shadow-2xl z-30
+           transform transition-transform duration-300 ease-in-out
+           lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:flex-shrink-0"
+    [ngClass]="{
+      'translate-x-0': isSidebarOpen,
+      '-translate-x-full': !isSidebarOpen
+    }"
+  >
+    <!-- Sidebar Header -->
+    <div class="h-20 flex items-center px-8 border-b border-gray-800 bg-gradient-to-r from-gray-800 to-gray-900">
+      <h1 class="text-2xl font-bold text-white flex items-center tracking-tight">
+        <svg class="w-7 h-7 mr-3" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+        </svg>
+        TradeHub
+      </h1>
+    </div>
+
+    <!-- User Info -->
+    <div class="p-6 border-b border-gray-800 bg-gradient-to-br from-gray-900/50 to-black/50">
+      <div class="flex items-center space-x-4">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center shadow-lg flex-shrink-0">
+          <span class="text-white font-bold text-xl">
+            {{ user?.username?.charAt(0)?.toUpperCase() || 'U' }}
+          </span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-base font-semibold text-white truncate">
+            {{ user?.username || 'User' }}
+          </p>
+          <p class="text-sm text-gray-400 truncate">
+            {{ user?.email }}
+          </p>
+          <div class="mt-1">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  [class.bg-gray-800]="user?.role === 'USER'"
+                  [class.bg-gray-700]="user?.role === 'ADMIN'"
+                  [class.text-gray-300]="user?.role === 'USER'"
+                  [class.text-white]="user?.role === 'ADMIN'">
+              {{ user?.role || 'USER' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-6 py-6 space-y-2 overflow-y-auto">
+      <a routerLink="/dashboard/company"
+         routerLinkActive="bg-gray-800 text-white border-r-4 border-white"
+         (click)="isSidebarOpen && toggleSidebar()"
+         class="flex items-center px-4 py-3 text-gray-300 rounded-xl
+                hover:bg-gray-800 hover:text-white transition-all duration-200 group">
+        <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/>
+          <path d="M8 7a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+        </svg>
+        <span class="font-medium">Companies</span>
+      </a>
+
+      <a *ngIf="user?.role === 'ADMIN'" routerLink="/dashboard/users"
+         routerLinkActive="bg-gray-800 text-white border-r-4 border-white"
+         (click)="isSidebarOpen && toggleSidebar()"
+         class="flex items-center px-4 py-3 text-gray-300 rounded-xl
+                hover:bg-gray-800 hover:text-white transition-all duration-200 group">
+        <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+        </svg>
+        <span class="font-medium">Users</span>
+      </a>
+
+      <a routerLink="/dashboard/profile"
+         routerLinkActive="bg-gray-800 text-white border-r-4 border-white"
+         (click)="isSidebarOpen && toggleSidebar()"
+         class="flex items-center px-4 py-3 text-gray-300 rounded-xl
+                hover:bg-gray-800 hover:text-white transition-all duration-200 group">
+        <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+        </svg>
+        <span class="font-medium">Profile</span>
+      </a>
+
+      <div class="pt-6 mt-6 border-t border-gray-800">
+        <button (click)="logout()"
+                class="w-full flex items-center px-4 py-3 text-gray-400 rounded-xl
+                       hover:bg-gray-800 hover:text-white transition-all duration-200 group">
+          <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3
+                 a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
+              clip-rule="evenodd"/>
+          </svg>
+          <span class="font-medium">Logout</span>
+        </button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Top Navigation -->
+    <header class="sticky top-0 z-20 glass-dark shadow-lg h-20
+                   border-b border-gray-800 flex-shrink-0">
+      <div class="flex items-center justify-between h-full px-6 sm:px-8 lg:px-10">
+        <!-- Mobile menu button -->
+        <button (click)="toggleSidebar()"
+                class="lg:hidden p-3 rounded-xl text-gray-400
+                       hover:text-white hover:bg-gray-800 transition-all duration-200">
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+
+        <!-- Header Right -->
+        <div class="flex items-center space-x-4 ml-auto">
+          <div class="flex items-center space-x-3 p-3 rounded-2xl
+                      glass-dark border border-gray-700">
+            <span class="hidden sm:block text-sm font-semibold text-white">
+              {{ user?.username }}
+            </span>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-700 to-gray-800
+                        flex items-center justify-center shadow-md">
+              <span class="text-white font-semibold text-sm">
+                {{ user?.username?.charAt(0)?.toUpperCase() || 'U' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content - Only show on dashboard home -->
+    <main *ngIf="router.url === '/dashboard' || router.url === '/dashboard/'" class="flex-1">
+      <!-- Hero Banner -->
+      <div class="bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white
+                  px-6 sm:px-8 lg:px-10 py-12 shadow-2xl animate-market-pulse">
+        <div class="max-w-7xl mx-auto">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-4xl font-bold mb-3 tracking-tight">
+                {{ greeting }}, {{ user?.username || 'User' }}!
+              </h2>
+              <p class="text-gray-300 text-lg">
+                {{ user?.role === 'ADMIN' ? 'Manage companies and users' : 'View company information' }}
+              </p>
+              <div class="mt-4">
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold
+                             bg-white/10 backdrop-blur-sm border border-white/20">
+                  <svg class="w-4 h-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                          clip-rule="evenodd"/>
+                  </svg>
+                  {{ user?.role || 'USER' }}
+                </span>
+              </div>
+            </div>
+            <div class="hidden lg:block">
+              <div class="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-sm
+                          border-2 border-white/20 flex items-center justify-center">
+                <span class="text-3xl font-bold text-white">
+                  {{ user?.username?.charAt(0)?.toUpperCase() || 'U' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Information Cards -->
+      <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <!-- Profile Card -->
+          <div class="glass-dark rounded-2xl shadow-xl p-8 border border-gray-700
+                      hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 card-hover animate-slide-up">
+            <div class="flex items-center mb-6">
+              <div class="flex-shrink-0 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl p-4 shadow-lg">
+                <svg class="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <h3 class="ml-4 text-xl font-bold text-white">Profile Information</h3>
+            </div>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                <span class="text-sm font-medium text-gray-400">User ID</span>
+                <span class="text-sm font-semibold text-white">#{{ user?.id || 'N/A' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                <span class="text-sm font-medium text-gray-400">Username</span>
+                <span class="text-sm font-semibold text-white">{{ user?.username || 'N/A' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                <span class="text-sm font-medium text-gray-400">Email</span>
+                <span class="text-sm font-semibold text-white">{{ user?.email || 'N/A' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-3">
+                <span class="text-sm font-medium text-gray-400">Account Type</span>
+                <span class="text-sm font-semibold px-3 py-1 rounded-full text-xs" 
+                      [class.bg-gray-800]="user?.role === 'USER'"
+                      [class.bg-gray-700]="user?.role === 'ADMIN'"
+                      [class.text-gray-300]="user?.role === 'USER'"
+                      [class.text-white]="user?.role === 'ADMIN'">
+                  {{ user?.role || 'USER' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account Status Card -->
+          <div class="glass-dark rounded-2xl shadow-xl p-8 border border-gray-700
+                      hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 card-hover animate-slide-up"
+               style="animation-delay: 0.1s">
+            <div class="flex items-center mb-6">
+              <div class="flex-shrink-0 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl p-4 shadow-lg">
+                <svg class="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586
+                       7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <h3 class="ml-4 text-xl font-bold text-white">Account Status</h3>
+            </div>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                <span class="text-sm font-medium text-gray-400">Status</span>
+                <span class="text-sm font-semibold text-white flex items-center">
+                  <span class="w-2 h-2 rounded-full bg-white mr-2 inline-block"></span>
+                  Active
+                </span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                <span class="text-sm font-medium text-gray-400">Login Time</span>
+                <span class="text-sm font-semibold text-white">{{ currentDate | date:'shortTime' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-3 border-b border-gray-700">
+                <span class="text-sm font-medium text-gray-400">Login Date</span>
+                <span class="text-sm font-semibold text-white">{{ currentDate | date:'mediumDate' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-3">
+                <span class="text-sm font-medium text-gray-400">Session</span>
+                <span class="text-sm font-semibold text-white">Active</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Card -->
+          <div class="glass-dark rounded-2xl shadow-xl p-8 border border-gray-700
+                      hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 card-hover animate-slide-up"
+               style="animation-delay: 0.2s">
+            <div class="flex items-center mb-6">
+              <div class="flex-shrink-0 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl p-4 shadow-lg">
+                <svg class="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2
+                       a1 1 0 000-1.664l-3-2z"
+                    clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <h3 class="ml-4 text-xl font-bold text-white">Quick Actions</h3>
+            </div>
+            <div class="space-y-4">
+              <a routerLink="/dashboard/company"
+                 class="block w-full px-4 py-4 text-sm font-semibold text-gray-200 rounded-xl border
+                        border-gray-600 glass-dark hover:bg-gray-800 hover:border-white/50 transition-all duration-200">
+                <span class="flex items-center">
+                  <svg class="w-5 h-5 mr-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                          clip-rule="evenodd"/>
+                  </svg>
+                  View Companies
+                </span>
+              </a>
+              <button (click)="logout()"
+                      class="w-full text-left px-4 py-4 text-sm font-semibold text-gray-400 rounded-xl border
+                             border-gray-600 glass-dark hover:bg-gray-800 hover:text-white transition-all duration-200">
+                <span class="flex items-center">
+                  <svg class="w-5 h-5 mr-3 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                      d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3
+                         a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
+                      clip-rule="evenodd"/>
+                  </svg>
+                  Logout
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Router Outlet for child routes -->
+      <div class="pb-10">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+
+    <!-- Router Outlet for child routes (when not on dashboard home) -->
+    <main *ngIf="router.url !== '/dashboard' && router.url !== '/dashboard/'" class="flex-1">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

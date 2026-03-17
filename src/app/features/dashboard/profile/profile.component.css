@@ -1,0 +1,18 @@
+/* Profile component specific styles */
+.profile-avatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.form-input {
+  transition: all 0.2s ease-in-out;
+}
+
+.form-input:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.edit-mode {
+  background-color: #f8fafc;
+  border: 2px solid #3b82f6;
+}

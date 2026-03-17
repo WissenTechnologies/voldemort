@@ -1,0 +1,180 @@
+/* Users component styles - Black & White Theme */
+.users-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.users-table th {
+  background-color: #1f2937;
+  border-bottom: 2px solid #374151;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #f3f4f6;
+}
+
+.users-table td {
+  border-bottom: 1px solid #374151;
+  vertical-align: middle;
+}
+
+.users-table tr:hover td {
+  background-color: rgba(55, 65, 81, 0.3);
+}
+
+.user-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-right: 0.75rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: #065f46;
+  color: white;
+}
+
+.status-inactive {
+  background-color: #374151;
+  color: #9ca3af;
+}
+
+.status-suspended {
+  background-color: #991b1b;
+  color: white;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.role-admin {
+  background-color: #1f2937;
+  color: white;
+  border: 1px solid #374151;
+}
+
+.role-user {
+  background-color: #374151;
+  color: #d1d5db;
+  border: 1px solid #4b5563;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #374151;
+  background-color: #1f2937;
+  color: #9ca3af;
+}
+
+.action-button:hover {
+  transform: scale(1.1);
+  color: white;
+  background-color: #374151;
+}
+
+.edit-button:hover {
+  background-color: #374151;
+  color: #60a5fa;
+  border-color: #60a5fa;
+}
+
+.suspend-button:hover {
+  background-color: #374151;
+  color: #f87171;
+  border-color: #f87171;
+}
+
+.activate-button:hover {
+  background-color: #374151;
+  color: #10b981;
+  border-color: #10b981;
+}
+
+.delete-button:hover {
+  background-color: #374151;
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.form-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #f3f4f6;
+}
+
+.form-input {
+  padding: 0.75rem 1rem;
+  border: 1px solid #374151;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease-in-out;
+  background-color: rgba(31, 41, 55, 0.5);
+  color: white;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+  background-color: rgba(31, 41, 55, 0.8);
+}
+
+/* Modal animation */
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal {
+  animation: modalIn 0.2s ease-out forwards;
+}
