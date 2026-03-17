@@ -16,10 +16,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.Entities.Role;
+import com.example.demo.Entities.PasswordResetToken;
 import com.example.demo.Entities.User;
 import com.example.demo.Repository.AuthRepo;
+import com.example.demo.Repository.TokenRepo;
+import com.example.demo.Services.EmailService;
+import com.example.demo.dto.ForgotPasswordRequest;
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.ResetPasswordRequest;
 import com.example.demo.utils.JwtUtil;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
@@ -30,6 +39,9 @@ public class AuthController {
     private AuthRepo userRepository;
 
     @Autowired
+    private TokenRepo tokenRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -38,53 +50,130 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @PostMapping("/register")
-public ResponseEntity<?> register(@RequestBody User user) {
+    @Autowired
+    private EmailService emailService;
 
-    if(userRepository.findByEmail(user.getEmail()).isPresent()){
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body("Email already exists");
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody User user) {
+
+        if(userRepository.findByEmail(user.getEmail()).isPresent()){
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("Email already exists");
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.USER);
+
+        userRepository.save(user);
+
+        // Send welcome email
+        try {
+            emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("User registered but unable to send welcome email");
+        }
+
+        return ResponseEntity.ok("User Registered Successfully");
     }
 
-    user.setPassword(passwordEncoder.encode(user.getPassword()));
-    user.setRole(Role.USER);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
-    userRepository.save(user);
+        try {
 
-    return ResponseEntity.ok("User Registered Successfully");
-}
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
 
-@PostMapping("/login")
-public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+            if(authentication.isAuthenticated()){
 
-    try {
+                User user = userRepository.findByEmail(request.getEmail()).get();
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+                String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
 
-        if(authentication.isAuthenticated()){
+                return ResponseEntity.ok(token);
+            }
 
-            User user = userRepository.findByEmail(request.getEmail()).get();
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Login Failed");
 
-            String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        } catch (Exception e) {
 
-            return ResponseEntity.ok(token);
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid Email or Password");
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            // Generate Token
+            String token = UUID.randomUUID().toString();
+
+            // Store Token
+            PasswordResetToken resetToken = new PasswordResetToken(token, user, LocalDateTime.now().plusMinutes(30));
+            tokenRepository.save(resetToken);
+
+            // Send Email
+            String resetLink = "http://localhost:4200/reset-password?token=" + token;
+            try {
+                emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
+            } catch (Exception e) {
+                return ResponseEntity
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Unable to send password reset email");
+            }
+
+            return ResponseEntity.ok("Password reset link sent to your email");
         }
 
         return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body("Login Failed");
+                .status(HttpStatus.NOT_FOUND)
+                .body("User not found");
+    }
 
-    } catch (Exception e) {
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        Optional<PasswordResetToken> tokenOptional = tokenRepository.findByToken(request.getToken());
+
+        if (tokenOptional.isPresent()) {
+            PasswordResetToken resetToken = tokenOptional.get();
+
+            if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body("Token expired");
+            }
+
+            User user = resetToken.getUser();
+
+            // Update Password
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            userRepository.save(user);
+
+            // Invalidate Token
+            tokenRepository.delete(resetToken);
+
+            return ResponseEntity.ok("Password reset successfully");
+        }
 
         return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body("Invalid Email or Password");
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Invalid or expired token");
     }
+
+
 }
-}
+
