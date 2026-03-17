@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-CompanyTimeSeriesSharesApplication<company-time-series-shares>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.example.company_time_series_shares.CompanyTimeSeriesSharesApplication",
+            "projectName": "company-time-series-shares",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
