@@ -2,6 +2,10 @@ package com.example.demo.Controllers;
 
 
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.Entities.Role;
 import com.example.demo.Entities.PasswordResetToken;
+import com.example.demo.Entities.Role;
 import com.example.demo.Entities.User;
 import com.example.demo.Repository.AuthRepo;
 import com.example.demo.Repository.TokenRepo;
@@ -25,10 +29,6 @@ import com.example.demo.dto.ForgotPasswordRequest;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.ResetPasswordRequest;
 import com.example.demo.utils.JwtUtil;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
