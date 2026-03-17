@@ -3,62 +3,67 @@ package com.example.auth.payload.response;
 import java.util.List;
 
 public class JwtResponse {
-    private String token;
-    private String type = "Bearer";
-    private Long id;
-    private String username;
-    private String email;
-    private List<String> roles;
+    private String accessToken;
+    private String refreshToken;
+    private UserDto user;
 
     public JwtResponse(String accessToken, Long id, String username, String email, List<String> roles) {
-        this.token = accessToken;
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.roles = roles;
+        this.accessToken = accessToken;
+        this.refreshToken = ""; // Add refresh token later if needed
+        this.user = new UserDto(id, username, email, roles);
     }
 
     public String getAccessToken() {
-        return token;
+        return accessToken;
     }
 
     public void setAccessToken(String accessToken) {
-        this.token = accessToken;
+        this.accessToken = accessToken;
     }
 
-    public String getTokenType() {
-        return type;
+    public String getRefreshToken() {
+        return refreshToken;
     }
 
-    public void setTokenType(String tokenType) {
-        this.type = tokenType;
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
-    public Long getId() {
-        return id;
+    public UserDto getUser() {
+        return user;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setUser(UserDto user) {
+        this.user = user;
     }
 
-    public String getEmail() {
-        return email;
-    }
+    public static class UserDto {
+        private String id;
+        private String name;
+        private String email;
+        private List<String> roles;
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+        public UserDto(Long id, String name, String email, List<String> roles) {
+            this.id = String.valueOf(id);
+            this.name = name;
+            this.email = email;
+            this.roles = roles;
+        }
 
-    public String getUsername() {
-        return username;
-    }
+        public String getId() {
+            return id;
+        }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+        public String getName() {
+            return name;
+        }
 
-    public List<String> getRoles() {
-        return roles;
+        public String getEmail() {
+            return email;
+        }
+
+        public List<String> getRoles() {
+            return roles;
+        }
     }
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -10,7 +10,7 @@ import { RegisterRequest } from '../../../core/models/user.model';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
@@ -61,7 +61,11 @@ export class RegisterComponent implements OnInit, OnDestroy {
         password: this.registerForm.value.password,
         confirmPassword: this.registerForm.value.confirmPassword
       };
-      this.authService.register(registerData);
+      this.authService.register(registerData).subscribe({
+        error: () => {}
+      });
+    } else {
+      this.registerForm.markAllAsTouched();
     }
   }
 

@@ -54,7 +54,7 @@
         <button
           type="submit"
           class="submit-btn"
-          [disabled]="loginForm.invalid || isLoading"
+          [disabled]="isLoading"
         >
           <span *ngIf="!isLoading">Sign In</span>
           <span *ngIf="isLoading" class="loading-spinner">
