@@ -1,0 +1,78 @@
+# Maven
+
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Maven Wrapper
+
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+
+*.log
+
+# Runtime files
+
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated files
+
+.DS_Store
+Thumbs.db
+
+# Environment variables
+
+.env
+.env.*
+
+# Spring Boot
+
+HELP.md
+
+# STS / Eclipse
+
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# IntelliJ IDEA
+
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# NetBeans
+
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# VS Code
+
+.vscode/
+
+# Node (if React frontend in same repo)
+
+node_modules/
+dist/
+build/
+
+# Temporary files
+
+*.tmp
+*.temp
+*.swp
