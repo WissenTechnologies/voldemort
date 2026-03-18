@@ -11,4 +11,5 @@ public interface CompanyService {
     Company getCompanyById(int id);
     Company updateCompany(int id, Company company);
     void deleteCompany(int id);
+    Boolean existsById(int id);
 }

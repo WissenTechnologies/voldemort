@@ -62,4 +62,8 @@ public Company updateCompany(int id, Company updatedCompany) {
     public void deleteCompany(int id) {
         repository.deleteById(id);
     }
+    @Override
+    public Boolean existsById(int id) {
+        return repository.existsById(id);
+    }
 }

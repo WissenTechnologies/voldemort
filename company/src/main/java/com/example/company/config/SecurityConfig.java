@@ -1,5 +1,7 @@
 package com.example.company.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,6 +26,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
     http
         .csrf(csrf -> csrf.disable())
+        .cors(cors -> {})
         .authorizeHttpRequests(auth -> auth
 
                 // GET ALL - /api/companies
@@ -51,5 +54,23 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
+}
+
+@Bean
+public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+
+    org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
+
+    config.setAllowedOrigins(List.of("http://localhost:3000")); // React
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedHeaders(List.of("*"));
+    config.setAllowCredentials(true);
+
+    org.springframework.web.cors.UrlBasedCorsConfigurationSource source =
+            new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+
+    source.registerCorsConfiguration("/**", config);
+
+    return source;
 }
 }
