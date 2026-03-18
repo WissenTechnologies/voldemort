@@ -1,7 +1,4 @@
 package com.example.demo.Controllers;
-
-
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,14 +17,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.Entities.PasswordResetToken;
+import com.example.demo.Entities.OtpToken;
 import com.example.demo.Entities.Role;
 import com.example.demo.Entities.User;
 import com.example.demo.Repository.AuthRepo;
 import com.example.demo.Repository.TokenRepo;
+import com.example.demo.Repository.OtpTokenRepository;
 import com.example.demo.Services.EmailService;
 import com.example.demo.dto.ForgotPasswordRequest;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.ResetPasswordRequest;
+import com.example.demo.dto.SendOtpRequest;
+import com.example.demo.dto.VerifyOtpRequest;
+import com.example.demo.dto.OtpResetPasswordRequest;
 import com.example.demo.utils.JwtUtil;
 
 @RestController
@@ -40,6 +42,9 @@ public class AuthController {
 
     @Autowired
     private TokenRepo tokenRepository;
+
+    @Autowired
+    private OtpTokenRepository otpTokenRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -71,9 +76,10 @@ public class AuthController {
         try {
             emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("User registered but unable to send welcome email");
+                    .body("User registered but unable to send welcome email. Error: " + e.getMessage());
         }
 
         return ResponseEntity.ok("User Registered Successfully");
@@ -172,6 +178,131 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body("Invalid or expired token");
+    }
+
+    // ==================== OTP-BASED PASSWORD RESET ENDPOINTS ====================
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<?> sendOtp(@RequestBody SendOtpRequest request) {
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+        if (!userOptional.isPresent()) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("User not found with email: " + request.getEmail());
+        }
+
+        User user = userOptional.get();
+
+        // Invalidate old OTPs
+        otpTokenRepository.deleteByUser(user);
+
+        // Generate OTP (6 digits)
+        String otp = String.format("%06d", (int)(Math.random() * 999999));
+
+        // Save OTP token
+        OtpToken otpToken = new OtpToken();
+        otpToken.setUser(user);
+        otpToken.setOtp(otp);
+        otpToken.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+        otpToken.setUsed(false);
+        otpTokenRepository.save(otpToken);
+
+        // Send OTP via email
+        try {
+            emailService.sendOtpEmail(user.getEmail(), otp);
+            return ResponseEntity.ok("OTP sent successfully to your email. Valid for 10 minutes.");
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to send OTP email. Please try again.");
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest request) {
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+        if (!userOptional.isPresent()) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("User not found");
+        }
+
+        User user = userOptional.get();
+
+        Optional<OtpToken> otpTokenOptional = otpTokenRepository.findByOtpAndUserAndUsedFalse(request.getOtp(), user);
+
+        if (!otpTokenOptional.isPresent()) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid OTP");
+        }
+
+        OtpToken otpToken = otpTokenOptional.get();
+
+        // Check if OTP is expired
+        if (otpToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("OTP has expired");
+        }
+
+        // Mark OTP as used
+        otpToken.setUsed(true);
+        otpTokenRepository.save(otpToken);
+
+        return ResponseEntity.ok("OTP verified successfully. You can now reset your password.");
+    }
+
+    @PostMapping("/reset-password-with-otp")
+    public ResponseEntity<?> resetPasswordWithOtp(@RequestBody OtpResetPasswordRequest request) {
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+        if (!userOptional.isPresent()) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("User not found");
+        }
+
+        User user = userOptional.get();
+
+        // Check if there's a recently verified OTP
+        Optional<OtpToken> otpTokenOptional = otpTokenRepository.findByUserAndUsedFalse(user);
+
+        if (otpTokenOptional.isPresent() && otpTokenOptional.get().isUsed()) {
+            // OTP has been verified, allow password reset
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            userRepository.save(user);
+
+            // Clean up OTP tokens
+            otpTokenRepository.deleteByUser(user);
+
+            return ResponseEntity.ok("Password reset successfully");
+        }
+
+        // Alternative: Check if there's a recently used (verified) OTP
+        Optional<OtpToken> verifiedOtpOptional = otpTokenRepository.findByUserAndUsedFalse(user);
+
+        if (verifiedOtpOptional.isPresent()) {
+            OtpToken otpToken = verifiedOtpOptional.get();
+
+            // Even if not used in this call, if we have a valid token, we can proceed
+            if (otpToken.getExpiresAt().isAfter(LocalDateTime.now())) {
+                user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+                userRepository.save(user);
+
+                // Mark OTP as used and clean up
+                otpToken.setUsed(true);
+                otpTokenRepository.save(otpToken);
+
+                return ResponseEntity.ok("Password reset successfully");
+            }
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Please verify your OTP first before resetting password");
     }
 
 
