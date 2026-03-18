@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Voldemort Share Market</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+        .header {
+            text-align: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eeeeee;
+        }
+        .header h1 {
+            color: #28a745; /* stock green */
+        }
+        .content {
+            padding: 20px 0;
+            line-height: 1.6;
+        }
+        .highlight {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px 0;
+            font-size: 12px;
+            color: #777;
+            border-top: 1px solid #eeeeee;
+            margin-top: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            margin-top: 15px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="header">
+            <h1>📈 Welcome to Voldemort Share Market</h1>
+        </div>
+
+        <div class="content">
+            <p>Hello <strong th:text="${name}">User</strong>,</p>
+
+            <p>We’re excited to have you onboard at <span class="highlight">Voldemort Share Market</span> 🚀</p>
+
+            <p>Your journey into the world of trading and smart investments starts now.</p>
+
+            <p><strong>Here’s what you can do next:</strong></p>
+            <ul>
+                <li>📊 Track real-time stock market trends</li>
+                <li>💼 Manage and monitor your portfolio</li>
+                <li>📈 Analyze stocks using smart insights</li>
+                <li>🔔 Set alerts for price movements</li>
+            </ul>
+
+            <p>Click below to start exploring:</p>
+
+            <a href="#" class="btn">Start Trading</a>
+
+            <p>If you have any questions, feel free to reach out — we’re here to help you grow your investments.</p>
+
+            <p>Happy Investing 💰,<br>
+            <strong>The Voldemort Team</strong></p>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 Voldemort Share Market. All rights reserved.
+        </div>
+
+    </div>
+</body>
+</html>

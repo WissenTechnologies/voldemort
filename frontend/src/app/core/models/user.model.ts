@@ -1,33 +1,32 @@
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  isEmailVerified?: boolean;
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER'
 }
 
-export interface LoginRequest {
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  password?: string;
+  role?: string; // Optional role field for frontend use
+}
+
+export interface UserCredentials {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface RegisterRequest {
-  name: string;
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
+  role?: string; // Optional role for registration
 }
 
 export interface AuthResponse {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+  token?: string;
+  // For handling plain text responses from Spring Boot
+  [key: string]: any;
 }

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your OTP Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+        .header {
+            text-align: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eeeeee;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+        }
+        .content {
+            padding: 20px 0;
+            line-height: 1.6;
+            text-align: center;
+        }
+        .otp-box {
+            background-color: #f8f9fa;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .otp-code {
+            font-size: 32px;
+            font-weight: bold;
+            color: #007bff;
+            letter-spacing: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        .warning {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px 0;
+            font-size: 12px;
+            color: #777;
+            border-top: 1px solid #eeeeee;
+            margin-top: 20px;
+        }
+        .highlight {
+            color: #007bff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="header">
+            <h1>🔐 Your Verification Code</h1>
+        </div>
+
+        <div class="content">
+            <p>Hello,</p>
+
+            <p>We received a password reset request for your Voldemort account. Use the OTP code below to verify and proceed:</p>
+
+            <div class="otp-box">
+                <p style="margin: 0; color: #666; font-size: 14px;">Your OTP Code</p>
+                <p class="otp-code" th:text="${otp}">123456</p>
+            </div>
+
+            <p><strong>Important:</strong></p>
+            <ul style="text-align: left; display: inline-block;">
+                <li>This code is valid for <span class="highlight" th:text="${expiry}">10 minutes</span> only</li>
+                <li>Do not share this code with anyone</li>
+                <li>Voldemort staff will never ask for your OTP</li>
+                <li>If you did not request this code, please ignore this email</li>
+            </ul>
+
+            <p style="margin-top: 25px;">Enter the OTP in the application to reset your password.</p>
+
+            <p class="warning">⚠️ If you did not request this OTP, please secure your account immediately.</p>
+
+            <p>Best regards,<br>
+            <strong>The Voldemort Team</strong></p>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 Voldemort Share Market. All rights reserved.<br>
+            This is an automated email. Please do not reply to this message.
+        </div>
+
+    </div>
+</body>
+</html>

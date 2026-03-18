@@ -1,0 +1,94 @@
+/* Alert Message Component Styles */
+.alert {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideIn 0.3s ease-out;
+}
+
+.alert-success {
+  background-color: #065f46;
+  color: white;
+  border: 1px solid #047857;
+}
+
+.alert-error {
+  background-color: #991b1b;
+  color: white;
+  border: 1px solid #7f1d1d;
+}
+
+.alert-warning {
+  background-color: #f59e0b;
+  color: white;
+  border: 1px solid #d97706;
+}
+
+.alert-info {
+  background-color: #1e40af;
+  color: white;
+  border: 1px solid #1e3a8a;
+}
+
+.alert-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.alert-icon {
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+}
+
+.alert-message {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.alert-close {
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+  background: none;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.alert-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Slide in animation */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal animation */
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal {
+  animation: modalIn 0.2s ease-out forwards;
+}
