@@ -66,6 +66,11 @@ public class AuthController {
                     .status(HttpStatus.CONFLICT)
                     .body("Email already exists");
         }
+        if(user.getRole() != null && user.getRole() == Role.ADMIN){
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body("Admin registration is not allowed");
+        }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(Role.USER);
