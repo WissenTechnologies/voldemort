@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { User } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth';
 
@@ -13,7 +13,7 @@ export class ProfileComponent implements OnInit {
   isEditing = false;
   profileForm: any = {};
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
@@ -25,6 +25,7 @@ export class ProfileComponent implements OnInit {
           role: user.role
         };
       }
+      this.cdr.detectChanges();
     });
   }
 

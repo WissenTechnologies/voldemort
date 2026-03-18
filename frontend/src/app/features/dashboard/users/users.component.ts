@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Subscription, interval } from 'rxjs';
 import { User } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth';
+import { AdminUsersService, CreateDemoUserRequest, DemoUser } from '../../../core/services/admin-users.service';
 
 export interface UserManagement {
   id: number;
@@ -11,6 +13,7 @@ export interface UserManagement {
   lastLogin: Date;
   createdAt: Date;
   company?: string;
+  password?: string;
 }
 
 @Component({
@@ -19,70 +22,100 @@ export interface UserManagement {
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.css']
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   isEditing = false;
   editingUser: UserManagement | null = null;
+  loading = false;
+  error: string | null = null;
   
-  users: UserManagement[] = [
-    {
-      id: 1,
-      username: 'john_doe',
-      email: 'john.doe@techsolutions.com',
-      role: 'USER',
-      status: 'Active',
-      lastLogin: new Date('2024-01-15T10:30:00'),
-      createdAt: new Date('2023-06-01'),
-      company: 'Tech Solutions Inc.'
-    },
-    {
-      id: 2,
-      username: 'jane_smith',
-      email: 'jane.smith@globalmfg.com',
-      role: 'USER',
-      status: 'Active',
-      lastLogin: new Date('2024-01-14T14:20:00'),
-      createdAt: new Date('2023-08-15'),
-      company: 'Global Manufacturing Co.'
-    },
-    {
-      id: 3,
-      username: 'admin_user',
-      email: 'admin@company.com',
-      role: 'ADMIN',
-      status: 'Active',
-      lastLogin: new Date('2024-01-15T09:15:00'),
-      createdAt: new Date('2023-01-01'),
-      company: 'System Administration'
-    },
-    {
-      id: 4,
-      username: 'bob_wilson',
-      email: 'bob.wilson@healthcareplus.com',
-      role: 'USER',
-      status: 'Suspended',
-      lastLogin: new Date('2023-12-20T16:45:00'),
-      createdAt: new Date('2023-09-10'),
-      company: 'Healthcare Plus'
-    },
-    {
-      id: 5,
-      username: 'alice_brown',
-      email: 'alice.brown@financecorp.com',
-      role: 'USER',
-      status: 'Inactive',
-      lastLogin: new Date('2023-11-05T11:30:00'),
-      createdAt: new Date('2023-07-20'),
-      company: 'Finance Corp International'
-    }
-  ];
+  users: UserManagement[] = [];
 
-  constructor(private authService: AuthService) {}
+  private subscriptions: Subscription[] = [];
+
+  constructor(
+    private authService: AuthService,
+    private adminUsersService: AdminUsersService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
-      this.currentUser = user;
+    this.subscriptions.push(
+      this.authService.currentUser$.subscribe(user => {
+        this.currentUser = user;
+      })
+    );
+
+    this.loadUsers();
+    
+    // Poll for users data every second
+    this.subscriptions.push(
+      interval(1000).subscribe(() => {
+        this.refreshUsers();
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  get isAdmin(): boolean {
+    return this.currentUser?.role === 'ADMIN';
+  }
+
+  loadUsers(): void {
+    if (!this.isAdmin) {
+      this.users = [];
+      return;
+    }
+
+    this.loading = true;
+    this.error = null;
+
+    this.adminUsersService.getUsers().subscribe({
+      next: (users) => {
+        this.users = users.map(u => this.mapDemoUser(u));
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err?.error || err?.message || 'Failed to load users';
+        this.cdr.detectChanges();
+      }
     });
+  }
+
+  // Silent refresh without loading state
+  refreshUsers(): void {
+    if (!this.isAdmin || this.isEditing) return; // Skip if editing
+
+    this.subscriptions.push(
+      this.adminUsersService.getUsers().subscribe({
+        next: (users) => {
+          this.users = users.map(u => this.mapDemoUser(u));
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          // Silent fail on auto-refresh
+        }
+      })
+    );
+  }
+
+  private mapDemoUser(user: DemoUser): UserManagement {
+    const createdAt = user.createdAt ? new Date(user.createdAt) : new Date();
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      status: user.enabled === false ? 'Inactive' : 'Active',
+      lastLogin: new Date(),
+      createdAt,
+      company: ''
+    };
   }
 
   editUser(user: UserManagement): void {
@@ -91,11 +124,13 @@ export class UsersComponent implements OnInit {
   }
 
   addUser(): void {
+    if (!this.isAdmin) return;
     this.isEditing = true;
     this.editingUser = {
       id: 0,
       username: '',
       email: '',
+      password: '',
       role: 'USER',
       status: 'Active',
       lastLogin: new Date(),
@@ -105,23 +140,40 @@ export class UsersComponent implements OnInit {
   }
 
   saveUser(): void {
-    if (this.editingUser) {
-      if (this.editingUser.id === 0) {
-        // Add new user
-        const newUser = {
-          ...this.editingUser,
-          id: Math.max(...this.users.map(u => u.id)) + 1
-        };
-        this.users.push(newUser);
-      } else {
-        // Update existing user
-        const index = this.users.findIndex(u => u.id === this.editingUser!.id);
-        if (index !== -1) {
-          this.users[index] = this.editingUser;
-        }
-      }
+    if (!this.isAdmin) return;
+    if (!this.editingUser) return;
+
+    if (this.editingUser.id !== 0) {
+      this.cancelEdit();
+      return;
     }
-    this.cancelEdit();
+
+    if (!this.editingUser.email || !this.editingUser.username || !this.editingUser.password) {
+      this.error = 'Email, username, and password are required';
+      return;
+    }
+
+    this.loading = true;
+    this.error = null;
+
+    const payload: CreateDemoUserRequest = {
+      email: this.editingUser.email,
+      username: this.editingUser.username,
+      password: this.editingUser.password,
+      role: this.editingUser.role
+    };
+
+    this.adminUsersService.createUser(payload).subscribe({
+      next: () => {
+        this.loading = false;
+        this.cancelEdit();
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err?.error || err?.message || 'Failed to create user';
+      }
+    });
   }
 
   cancelEdit(): void {
@@ -130,8 +182,20 @@ export class UsersComponent implements OnInit {
   }
 
   deleteUser(user: UserManagement): void {
+    if (!this.isAdmin) return;
     if (confirm(`Are you sure you want to delete ${user.username}? This action cannot be undone.`)) {
-      this.users = this.users.filter(u => u.id !== user.id);
+      this.loading = true;
+      this.error = null;
+      this.adminUsersService.deleteUser(user.id).subscribe({
+        next: () => {
+          this.loading = false;
+          this.loadUsers();
+        },
+        error: (err) => {
+          this.loading = false;
+          this.error = err?.error || err?.message || 'Failed to delete user';
+        }
+      });
     }
   }
 

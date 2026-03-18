@@ -7,6 +7,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { ProfileComponent } from './profile/profile.component';
 import { CompanyComponent } from './company/company.component';
 import { UsersComponent } from './users/users.component';
+import { StockChartComponent } from './components/stock-chart/stock-chart.component';
 
 import { SharedModule } from '../../shared/shared.module';
 
@@ -30,7 +31,8 @@ const dashboardRoutes: Routes = [
     DashboardComponent,
     ProfileComponent,
     CompanyComponent,
-    UsersComponent
+    UsersComponent,
+    StockChartComponent
   ],
   imports: [
     CommonModule,
@@ -43,7 +45,8 @@ const dashboardRoutes: Routes = [
     DashboardComponent,
     ProfileComponent,
     CompanyComponent,
-    UsersComponent
+    UsersComponent,
+    StockChartComponent
   ]
 })
 export class DashboardModule { }
