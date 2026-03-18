@@ -25,6 +25,8 @@ public class Company {
     private String sector;
 
     private String website;
+
+    @Column(name = "logo_url", length = 512)
     private String logoUrl;
 
     @Column(nullable = false)

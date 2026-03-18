@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Your Account</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;600;700;900&display=swap');
         
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --border: #334155;
+        }
+
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: #0f172a;
-            color: #f1f5f9;
+            font-family: 'Roboto Condensed', 'Helvetica Neue Condensed', 'Arial Narrow', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 0;
             -webkit-font-smoothing: antialiased;
@@ -18,30 +27,30 @@
         .wrapper {
             width: 100%;
             table-layout: fixed;
-            background-color: #0f172a;
+            background-color: var(--bg);
             padding-bottom: 40px;
         }
         .main {
-            background-color: #1e293b;
+            background-color: var(--surface);
             margin: 0 auto;
             width: 100%;
             max-width: 600px;
             border-spacing: 0;
-            color: #f1f5f9;
+            color: var(--text);
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             margin-top: 40px;
         }
         .header {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
             padding: 40px;
             text-align: center;
         }
         .header h1 {
             margin: 0;
             font-size: 28px;
-            font-weight: 700;
+            font-weight: 900;
             letter-spacing: -0.025em;
             color: #ffffff;
         }
@@ -53,27 +62,27 @@
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 24px;
-            color: #94a3b8;
+            color: var(--text-muted);
         }
         .otp-container {
-            background-color: #334155;
+            background-color: var(--primary);
             padding: 32px;
             border-radius: 12px;
             margin-bottom: 32px;
-            border: 1px solid #475569;
+            border: 1px solid var(--border);
         }
         .otp-label {
             display: block;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            color: #3b82f6;
+            color: #ffffff;
             margin-bottom: 12px;
         }
         .otp-code {
             font-size: 48px;
-            font-weight: 700;
+            font-weight: 900;
             color: #ffffff;
             letter-spacing: 0.2em;
             margin: 0;
@@ -82,14 +91,14 @@
             padding: 0 40px 40px;
             text-align: center;
             font-size: 14px;
-            color: #64748b;
+            color: var(--text-muted);
         }
         .footer p {
             margin: 0 0 12px;
         }
         .divider {
             height: 1px;
-            background-color: #334155;
+            background-color: var(--border);
             margin: 40px 0;
         }
     </style>
@@ -109,7 +118,7 @@
                         <span class="otp-label">Verification Code</span>
                         <h2 class="otp-code" th:text="${otp}">123456</h2>
                     </div>
-                    <p>This code will expire in <span style="color: #ffffff; font-weight: 600;" th:text="${expiry}">10 minutes</span>. If you didn't request this, you can safely ignore this email.</p>
+                    <p>This code will expire in <span style="color: #ffffff; font-weight: 700;" th:text="${expiry}">10 minutes</span>. If you didn't request this, you can safely ignore this email.</p>
                 </td>
             </tr>
             <tr>

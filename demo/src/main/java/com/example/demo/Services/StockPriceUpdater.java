@@ -32,8 +32,8 @@ public class StockPriceUpdater {
         for (Stock stock : stocks) {
             BigDecimal currentPrice = stock.getCurrentPrice();
             
-            // Random fluctuation: max 0.5% every 1 second
-            double changePercent = (random.nextDouble() - 0.5) * 0.01; 
+            // Random fluctuation: max 2% every 1 second (more volatile)
+            double changePercent = (random.nextDouble() - 0.5) * 0.04; 
             BigDecimal variation = currentPrice.multiply(BigDecimal.valueOf(changePercent));
             BigDecimal newPrice = currentPrice.add(variation).setScale(2, RoundingMode.HALF_UP);
             
@@ -49,6 +49,7 @@ public class StockPriceUpdater {
             StockHistory history = new StockHistory(stock, LocalDateTime.now(), newPrice);
             stockHistoryRepo.save(history);
         }
-        System.out.println("Real-time prices updated at " + LocalDateTime.now());
+        // Optional: uncomment for debug only
+        // System.out.println("Real-time prices updated at " + LocalDateTime.now());
     }
 }
