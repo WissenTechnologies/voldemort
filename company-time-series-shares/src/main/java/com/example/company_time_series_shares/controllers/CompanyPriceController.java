@@ -13,6 +13,7 @@ import com.example.company_time_series_shares.services.CompanyPriceService;
 
 @RestController
 @RequestMapping("/api/prices")
+@CrossOrigin(origins = "*") // Allow CORS for all origins (for testing)
 public class CompanyPriceController {
 
     @Autowired
