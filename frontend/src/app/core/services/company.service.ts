@@ -151,6 +151,25 @@ export class CompanyService {
     );
   }
 
+  getRecentPrices(companyId: number, seconds: number = 300): Observable<CompanyPrice[]> {
+    if (this.useMockData) {
+      return of(this.generateMockPrices(companyId, 1)).pipe(delay(200));
+    }
+
+    return this.http.get<CompanyPrice[]>(`${this.pricesUrl}/api/prices/recent/${companyId}`, {
+      params: { seconds: String(seconds) },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.getAuthToken()}`
+      }
+    }).pipe(
+      catchError(error => {
+        console.error('Error fetching recent prices:', error);
+        return of(this.generateMockPrices(companyId, 1));
+      })
+    );
+  }
+
   createCompany(company: any): Observable<Company> {
     if (this.useMockData) {
       const nextId = Math.max(...this.mockCompanies.map(c => c.id), 0) + 1;
@@ -263,6 +282,8 @@ export class CompanyService {
       symbol: backendCompany.symbol,
       description: backendCompany.description,
       sector: backendCompany.sector || backendCompany.industry,
+      volume: backendCompany.volume,
+      value: backendCompany.value,
       marketCap: backendCompany.marketCap,
       createdAt: backendCompany.createdAt || new Date().toISOString(),
       updatedAt: backendCompany.updatedAt || new Date().toISOString()

@@ -3,7 +3,10 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { User } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth';
 import { CompanyService } from '../../../core/services/company.service';
+import { PortfolioService } from '../../../core/services/portfolio.service';
+import { OrderService } from '../../../core/services/order.service';
 import { CompanyWithLatestPrice, CompanyPrice, CandlestickData } from '../../../core/models/company.model';
+import { Portfolio } from '../../../core/models/portfolio.model';
 import { Subscription, interval } from 'rxjs';
 
 @Component({
@@ -31,12 +34,23 @@ export class CompanyComponent implements OnInit, OnDestroy {
   
   // Stock data loading state
   stockDataLoading = false;
+
+  portfolios: Portfolio[] = [];
+  loadingPortfolios = false;
+  tradePortfolioId: number | null = null;
+  tradeQuantity = 1;
+  trading = false;
+  tradeError: string | null = null;
+  tradeSuccess: string | null = null;
   
   private subscriptions: Subscription[] = [];
+  private selectedCompanyChartTickSub: Subscription | null = null;
 
   constructor(
     private authService: AuthService,
     private companyService: CompanyService,
+    private portfolioService: PortfolioService,
+    private orderService: OrderService,
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef
   ) {}
@@ -68,6 +82,8 @@ export class CompanyComponent implements OnInit, OnDestroy {
       ceo: [''],
       foundedYear: [null],
       headquarters: [''],
+      volume: [null],
+      value: [null],
       marketCap: [null],
       peRatio: [null],
       eps: [null],
@@ -75,8 +91,84 @@ export class CompanyComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadRealtimeStockData(companyId: number): void {
+    this.stockDataLoading = true;
+
+    let initial$;
+    switch (this.selectedTimeRange) {
+      case '6M':
+        initial$ = this.companyService.getSixMonthsData(companyId);
+        break;
+      case '1Y':
+        initial$ = this.companyService.getOneYearData(companyId);
+        break;
+      case '1M':
+      default:
+        initial$ = this.companyService.getOneMonthData(companyId);
+        break;
+    }
+
+    this.subscriptions.push(
+      initial$.subscribe({
+        next: (data) => {
+          this.stockChartData = Array.isArray(data) ? data : [];
+          this.candlestickData = this.generateCandlestickFromPrices(this.stockChartData);
+          this.stockDataLoading = false;
+          this.cdr.detectChanges();
+
+          this.selectedCompanyChartTickSub?.unsubscribe();
+          this.selectedCompanyChartTickSub = interval(1000).subscribe(() => {
+            if (!this.selectedCompany || this.selectedCompany.id !== companyId) return;
+
+            this.companyService.getLatestPrice(companyId).subscribe(price => {
+              if (price === null) return;
+              const point: CompanyPrice = {
+                id: 0,
+                companyId,
+                value: price,
+                recordedAt: new Date().toISOString()
+              };
+
+              const last = this.stockChartData[this.stockChartData.length - 1];
+              if (last && Math.abs(new Date(last.recordedAt).getTime() - new Date(point.recordedAt).getTime()) < 900) {
+                this.stockChartData[this.stockChartData.length - 1] = point;
+              } else {
+                this.stockChartData = [...this.stockChartData, point];
+              }
+
+              const maxPoints = this.selectedTimeRange === '1M' ? 4000 : this.selectedTimeRange === '6M' ? 6000 : 8000;
+              if (this.stockChartData.length > maxPoints) {
+                this.stockChartData = this.stockChartData.slice(this.stockChartData.length - maxPoints);
+              }
+
+              this.candlestickData = this.generateCandlestickFromPrices(this.stockChartData);
+              this.cdr.detectChanges();
+            });
+          });
+        },
+        error: () => {
+          this.subscriptions.push(
+            this.companyService.getRecentPrices(companyId, 300).subscribe({
+              next: (fallback) => {
+                this.stockChartData = Array.isArray(fallback) ? fallback : [];
+                this.candlestickData = this.generateCandlestickFromPrices(this.stockChartData);
+                this.stockDataLoading = false;
+                this.cdr.detectChanges();
+              },
+              error: () => {
+                this.stockDataLoading = false;
+                this.cdr.detectChanges();
+              }
+            })
+          );
+        }
+      })
+    );
+  }
+
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.selectedCompanyChartTickSub?.unsubscribe();
   }
 
   get isAdmin(): boolean {
@@ -139,6 +231,8 @@ export class CompanyComponent implements OnInit, OnDestroy {
       ceo: raw.ceo,
       foundedYear: raw.foundedYear,
       headquarters: raw.headquarters,
+      volume: raw.volume,
+      value: raw.value,
       marketCap: raw.marketCap,
       peRatio: raw.peRatio,
       eps: raw.eps,
@@ -260,8 +354,104 @@ export class CompanyComponent implements OnInit, OnDestroy {
     this.stockDataLoading = true;
     this.stockChartData = [];
     this.candlestickData = [];
+    this.selectedCompanyChartTickSub?.unsubscribe();
+    this.selectedCompanyChartTickSub = null;
     this.cdr.detectChanges();
-    this.loadStockData(company.id);
+    this.loadRealtimeStockData(company.id);
+
+    this.tradeError = null;
+    this.tradeSuccess = null;
+    this.tradeQuantity = 1;
+    this.tradePortfolioId = null;
+    this.loadUserPortfolios();
+  }
+
+  private getNumericUserId(): number {
+    const raw: any = this.user?.id;
+    if (typeof raw === 'number') return raw;
+    if (typeof raw === 'string' && /^\d+$/.test(raw)) return Number(raw);
+    return 0;
+  }
+
+  loadUserPortfolios(): void {
+    const userId = this.getNumericUserId();
+    if (userId <= 0) {
+      this.tradeError = 'User id is not available. Please re-login.';
+      this.portfolios = [];
+      this.tradePortfolioId = null;
+      return;
+    }
+
+    this.loadingPortfolios = true;
+    this.subscriptions.push(
+      this.portfolioService.getPortfoliosByUserId(userId).subscribe({
+        next: (res) => {
+          this.portfolios = Array.isArray(res?.data) ? res.data : [];
+          this.tradePortfolioId = this.portfolios.length > 0 ? this.portfolios[0].id : null;
+          this.loadingPortfolios = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.loadingPortfolios = false;
+          this.portfolios = [];
+          this.tradePortfolioId = null;
+          this.tradeError = err?.error?.message || err?.message || 'Failed to load portfolios';
+          this.cdr.detectChanges();
+        }
+      })
+    );
+  }
+
+  buyStock(): void {
+    const userId = this.getNumericUserId();
+    const companyId = this.selectedCompany?.id ?? 0;
+    const portfolioId = this.tradePortfolioId ?? 0;
+
+    this.tradeError = null;
+    this.tradeSuccess = null;
+
+    if (userId <= 0) {
+      this.tradeError = 'User id is not available. Please re-login.';
+      return;
+    }
+    if (companyId <= 0) {
+      this.tradeError = 'Company id is missing.';
+      return;
+    }
+    if (portfolioId <= 0) {
+      this.tradeError = 'Please select a portfolio.';
+      return;
+    }
+    if (!Number.isFinite(this.tradeQuantity) || this.tradeQuantity <= 0) {
+      this.tradeError = 'Quantity must be greater than 0.';
+      return;
+    }
+
+    this.trading = true;
+    this.subscriptions.push(
+      this.orderService.buyStock({
+        userId,
+        portfolioId,
+        companyId,
+        quantity: this.tradeQuantity
+      }).subscribe({
+        next: () => {
+          this.trading = false;
+          this.tradeSuccess = 'Bought successfully';
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.trading = false;
+          const backendBody = err?.error;
+          this.tradeError =
+            (typeof backendBody === 'string' ? backendBody : null) ||
+            backendBody?.message ||
+            err?.message ||
+            'Failed to buy stock';
+          this.cdr.detectChanges();
+        }
+      })
+    );
   }
 
   loadStockData(companyId: number): void {
@@ -286,7 +476,9 @@ export class CompanyComponent implements OnInit, OnDestroy {
       dataObservable.subscribe({
         next: (data) => {
           this.stockChartData = data;
-          this.loadCandlestickData(companyId);
+          this.candlestickData = this.generateCandlestickFromPrices(data);
+          this.stockDataLoading = false;
+          this.cdr.detectChanges();
         },
         error: () => {
           this.stockDataLoading = false;
@@ -297,19 +489,50 @@ export class CompanyComponent implements OnInit, OnDestroy {
   }
 
   loadCandlestickData(companyId: number): void {
-    this.subscriptions.push(
-      this.companyService.getCandlestickData(companyId).subscribe(data => {
-        this.candlestickData = data;
-        this.stockDataLoading = false;
-        this.cdr.detectChanges();
-      })
-    );
+    // No-op: candlestick data is derived from the price history we already load.
+    // Kept for backwards compatibility with older template calls.
+    this.stockDataLoading = false;
+    this.cdr.detectChanges();
+  }
+
+  private generateCandlestickFromPrices(prices: CompanyPrice[]): CandlestickData[] {
+    if (!prices || prices.length === 0) return [];
+
+    // Group by day (YYYY-MM-DD)
+    const grouped = new Map<string, CompanyPrice[]>();
+    for (const p of prices) {
+      const key = new Date(p.recordedAt).toISOString().slice(0, 10);
+      const arr = grouped.get(key);
+      if (arr) {
+        arr.push(p);
+      } else {
+        grouped.set(key, [p]);
+      }
+    }
+
+    const out: CandlestickData[] = [];
+    grouped.forEach((dayPrices, day) => {
+      // ensure sorted
+      dayPrices.sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime());
+      const open = dayPrices[0].value;
+      const close = dayPrices[dayPrices.length - 1].value;
+      let high = open;
+      let low = open;
+      for (const dp of dayPrices) {
+        if (dp.value > high) high = dp.value;
+        if (dp.value < low) low = dp.value;
+      }
+      out.push({ time: day, open, high, low, close });
+    });
+
+    out.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+    return out;
   }
 
   setTimeRange(range: string): void {
     this.selectedTimeRange = range;
     if (this.selectedCompany) {
-      this.loadStockData(this.selectedCompany.id);
+      this.loadRealtimeStockData(this.selectedCompany.id);
     }
   }
 
@@ -317,6 +540,8 @@ export class CompanyComponent implements OnInit, OnDestroy {
     this.selectedCompany = null;
     this.stockChartData = [];
     this.candlestickData = [];
+    this.selectedCompanyChartTickSub?.unsubscribe();
+    this.selectedCompanyChartTickSub = null;
   }
 
   formatPrice(price: number): string {

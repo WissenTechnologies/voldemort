@@ -112,12 +112,20 @@ export class AuthService {
         console.log('Token payload:', payload);
         
         if (payload) {
+          const idCandidate = payload.userId ?? payload.id ?? payload.sub;
+          const parsedId = typeof idCandidate === 'number'
+            ? idCandidate
+            : (typeof idCandidate === 'string' && /^\d+$/.test(idCandidate) ? Number(idCandidate) : 0);
+
+          const emailFromPayload = payload.email || payload.emailAddress;
+          const emailFromSub = typeof payload.sub === 'string' && payload.sub.includes('@') ? payload.sub : '';
+
           // Create a user object from token payload
           // Handle different possible field names in JWT payload
           const user: User = {
-            id: payload.sub || payload.id || payload.userId || 0,
+            id: Number.isFinite(parsedId) ? parsedId : 0,
             username: payload.username || payload.name || payload.email?.split('@')[0] || 'Unknown',
-            email: payload.email || payload.emailAddress || '',
+            email: emailFromPayload || emailFromSub || '',
             role: payload.role || payload.authorities?.[0]?.replace('ROLE_', '') || 'USER'
           };
           

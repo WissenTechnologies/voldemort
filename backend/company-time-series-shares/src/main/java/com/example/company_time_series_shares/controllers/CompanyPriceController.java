@@ -46,7 +46,15 @@ public class CompanyPriceController {
         );
     }
 
-    // ✅ 3. GET CUSTOM RANGE (RAW DATA)
+    @GetMapping("/recent/{companyId}")
+    public ResponseEntity<List<CompanyPrice>> getRecent(
+            @PathVariable int companyId,
+            @RequestParam(defaultValue = "300") int seconds) {
+
+        return ResponseEntity.ok(service.getRecentPrices(companyId, seconds));
+    }
+
+    // 3. GET CUSTOM RANGE (RAW DATA)
     @GetMapping("/range/{companyId}")
     public ResponseEntity<List<CompanyPrice>> getRange(
             @PathVariable int companyId,
@@ -62,7 +70,7 @@ public class CompanyPriceController {
         );
     }
 
-    // ✅ 4. LAST 1 MONTH
+    // 4. LAST 1 MONTH
     @GetMapping("/1month/{companyId}")
     public ResponseEntity<List<CompanyPrice>> get1Month(@PathVariable int companyId) {
 

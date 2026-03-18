@@ -26,13 +26,15 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         .csrf(csrf -> csrf.disable())
         .cors(cors -> {})
         .authorizeHttpRequests(auth -> auth
+
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
  
                 .requestMatchers(HttpMethod.GET, "/api/companies").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/companies/**").permitAll()
  
-                .requestMatchers(HttpMethod.POST, "/api/companies").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/companies/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/companies/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/companies").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/companies/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/companies/**").permitAll()
  
                 .anyRequest().authenticated()
         )

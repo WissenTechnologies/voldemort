@@ -68,6 +68,19 @@
         <span class="font-medium">Companies</span>
       </a>
 
+      <a routerLink="/dashboard/portfolio"
+         routerLinkActive="bg-gray-800 text-white border-r-4 border-white"
+         (click)="isSidebarOpen && toggleSidebar()"
+         class="flex items-center px-4 py-3 text-gray-300 rounded-xl
+                hover:bg-gray-800 hover:text-white transition-all duration-200 group">
+        <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+          <path d="M6 7a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" />
+          <path d="M6 11a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" />
+        </svg>
+        <span class="font-medium">Portfolio</span>
+      </a>
+
       <a *ngIf="user?.role === 'ADMIN'" routerLink="/dashboard/users"
          routerLinkActive="bg-gray-800 text-white border-r-4 border-white"
          (click)="isSidebarOpen && toggleSidebar()"

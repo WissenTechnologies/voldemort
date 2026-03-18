@@ -4,7 +4,15 @@ export interface Company {
   symbol: string;
   description?: string;
   sector?: string;
+  industry?: string;
+  volume?: number;
+  value?: number;
   marketCap?: number;
+  peRatio?: number;
+  eps?: number;
+  foundedYear?: number;
+  headquarters?: string;
+  ceo?: string;
   createdAt?: string;
   updatedAt?: string;
 }

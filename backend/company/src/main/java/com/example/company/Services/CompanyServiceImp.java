@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.company.client.MarketClient;
+
 import com.example.company.Entities.Company;
 import com.example.company.Repos.CompanyRepo;
 
@@ -14,10 +16,19 @@ public class CompanyServiceImp implements CompanyService {
 
     @Autowired
     private  CompanyRepo repository;
+
+    @Autowired
+    private MarketClient marketClient;
     
     @Override
     public Company createCompany(Company company) {
-        return repository.save(company);
+        Company createdCompany = repository.save(company);
+        try {
+            marketClient.initMarket(createdCompany.getId());
+        } catch (Exception e) {
+            System.err.println("Market init failed for companyId=" + createdCompany.getId() + ": " + e.getMessage());
+        }
+        return createdCompany;
     }
     @Override
     public List<Company> getAllCompanies() {

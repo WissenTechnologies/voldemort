@@ -23,7 +23,6 @@ import java.util.List;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
-
     private static final String SECRET_KEY = "mySecretKey123456789012345678901234567890";
     private static final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 

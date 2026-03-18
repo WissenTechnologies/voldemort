@@ -18,7 +18,7 @@ public class CompanyPriceServiceImpl implements CompanyPriceService {
         this.repository = repository;
     }
 
-    // ✅ 1. LATEST PRICE
+    // 1. LATEST PRICE
     @Override
     public Double getLatestPrice(int companyId) {
         return repository
@@ -27,7 +27,7 @@ public class CompanyPriceServiceImpl implements CompanyPriceService {
                 .orElse(0.0);
     }
 
-    // ✅ 2. RAW DATA
+    // 2. RAW DATA
     @Override
     public List<CompanyPrice> getPrices(int companyId, LocalDateTime start, LocalDateTime end) {
 
@@ -35,7 +35,15 @@ public class CompanyPriceServiceImpl implements CompanyPriceService {
                 .findByCompanyIdAndRecordedAtBetweenOrderByRecordedAtAsc(companyId, start, end);
     }
 
-    // ✅ 3. CANDLESTICK DATA (HOURLY GROUPING)
+    @Override
+    public List<CompanyPrice> getRecentPrices(int companyId, int seconds) {
+        int safeSeconds = Math.max(1, seconds);
+        LocalDateTime end = LocalDateTime.now();
+        LocalDateTime start = end.minusSeconds(safeSeconds);
+        return getPrices(companyId, start, end);
+    }
+
+    // 3. CANDLESTICK DATA (HOURLY GROUPING)
     @Override
     public List<Object> getCandlestickData(int companyId, LocalDateTime start, LocalDateTime end) {
 

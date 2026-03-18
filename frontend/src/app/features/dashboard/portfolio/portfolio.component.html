@@ -1,0 +1,203 @@
+<div class="max-w-7xl mx-auto px-6 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-white mb-2">Portfolio</h1>
+    <p class="text-gray-400">Create portfolios and view your holdings</p>
+  </div>
+
+  <!-- Create Portfolio -->
+  <div class="glass-darker rounded-2xl border border-gray-700 p-6 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-white">Create Portfolio</h2>
+    </div>
+
+    <div *ngIf="createError" class="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+      {{ createError }}
+    </div>
+
+    <form [formGroup]="createForm" (ngSubmit)="createPortfolio()" class="flex flex-col sm:flex-row gap-3 sm:items-end">
+      <div class="flex-1">
+        <label class="block text-sm text-gray-300 mb-1">Portfolio Name</label>
+        <input
+          type="text"
+          formControlName="name"
+          class="w-full px-4 py-3 rounded-xl bg-gray-900/40 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
+          placeholder="e.g. Long Term"
+        />
+        <div *ngIf="createForm.get('name')?.touched && createForm.get('name')?.invalid" class="text-xs text-red-300 mt-1">
+          Name is required
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="creating"
+        class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-colors">
+        {{ creating ? 'Creating...' : 'Create' }}
+      </button>
+    </form>
+  </div>
+
+  <!-- Portfolios List -->
+  <div class="glass-darker rounded-2xl border border-gray-700 p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-white">Your Portfolios</h2>
+      <button (click)="loadPortfolios()" class="text-sm text-gray-300 hover:text-white transition-colors">
+        Refresh
+      </button>
+    </div>
+
+    <div *ngIf="loadingPortfolios" class="text-gray-300">Loading portfolios...</div>
+
+    <div *ngIf="portfoliosError" class="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+      {{ portfoliosError }}
+    </div>
+
+    <div *ngIf="!loadingPortfolios && portfolios.length === 0" class="text-gray-400 text-sm">
+      No portfolios yet. Create one above.
+    </div>
+
+    <div *ngIf="!loadingPortfolios && portfolios.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <button
+        *ngFor="let p of portfolios"
+        (click)="selectPortfolio(p)"
+        class="text-left glass-dark rounded-2xl p-5 border border-gray-700 hover:border-gray-600 transition-all">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-white font-semibold text-lg">{{ p.name }}</div>
+            <div class="text-gray-400 text-sm">ID: {{ p.id }}</div>
+          </div>
+          <div class="text-gray-400 text-sm">View</div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Holdings Modal -->
+  <div *ngIf="selectedPortfolio" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="closeSelected()">
+    <div class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl border border-gray-700/50 shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+      <div class="p-6 border-b border-gray-700/50 flex items-center justify-between">
+        <div>
+          <h3 class="text-2xl font-bold text-white">{{ selectedPortfolio.name }}</h3>
+          <p class="text-gray-400 text-sm">Portfolio ID: {{ selectedPortfolio.id }}</p>
+        </div>
+        <button (click)="closeSelected()" class="text-gray-400 hover:text-white transition-colors">
+          <svg class="w-6 h-6" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6">
+        <div *ngIf="loadingHoldings" class="text-gray-300">Loading holdings...</div>
+
+        <div *ngIf="holdingsError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+          {{ holdingsError }}
+        </div>
+
+        <div *ngIf="selectedSummary" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="rounded-2xl border border-gray-700/50 p-5 bg-gray-900/30">
+            <div class="text-xs text-gray-400 uppercase tracking-wider">Total Investment</div>
+            <div class="text-2xl font-bold text-white mt-1">{{ formatCurrency(selectedSummary.totalInvestment) }}</div>
+          </div>
+          <div class="rounded-2xl border border-gray-700/50 p-5 bg-gray-900/30">
+            <div class="text-xs text-gray-400 uppercase tracking-wider">Current Value</div>
+            <div class="text-2xl font-bold text-white mt-1">{{ formatCurrency(selectedSummary.currentValue) }}</div>
+          </div>
+          <div class="rounded-2xl border border-gray-700/50 p-5 bg-gray-900/30">
+            <div class="text-xs text-gray-400 uppercase tracking-wider">Overall P/L</div>
+            <div class="text-2xl font-bold mt-1" [class]="getPlClass(selectedSummary.overallPL)">
+              {{ formatCurrency(selectedSummary.overallPL) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-gray-700/50 overflow-hidden">
+          <div class="px-5 py-4 bg-gray-900/40 border-b border-gray-700/50">
+            <h4 class="text-white font-semibold">Holdings</h4>
+          </div>
+
+          <div *ngIf="!loadingHoldings && holdings.length === 0" class="p-5 text-gray-400 text-sm">
+            No holdings found.
+          </div>
+
+          <div *ngIf="holdings.length > 0" class="overflow-x-auto">
+            <table class="min-w-full">
+              <thead class="bg-gray-900/50 border-b border-gray-700/50">
+                <tr>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Company</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Quantity</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Avg Price</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Current Price</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">P/L</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-700/50">
+                <tr *ngFor="let h of holdings" class="hover:bg-gray-800/30 transition-colors">
+                  <td class="px-5 py-4 text-white">{{ h.companyName }}</td>
+                  <td class="px-5 py-4 text-gray-200">{{ formatNumber(h.quantity) }}</td>
+                  <td class="px-5 py-4 text-gray-200">{{ formatCurrency(h.avgPrice) }}</td>
+                  <td class="px-5 py-4 text-gray-200">{{ formatCurrency(h.currentPrice) }}</td>
+                  <td class="px-5 py-4 font-semibold" [class]="getPlClass(h.profitLoss)">
+                    {{ formatCurrency(h.profitLoss) }}
+                  </td>
+                  <td class="px-5 py-4">
+                    <button
+                      (click)="openSellModal(h)"
+                      class="px-3 py-1 rounded-md bg-red-600 hover:bg-red-500 text-white text-xs transition-colors">
+                      Sell
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sell Modal -->
+  <div *ngIf="selectedPortfolio && sellingHolding" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" (click)="closeSellModal()">
+    <div class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl border border-gray-700/50 shadow-2xl max-w-xl w-full" (click)="$event.stopPropagation()">
+      <div class="p-6 border-b border-gray-700/50 flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-bold text-white">Sell Stock</h3>
+          <p class="text-gray-400 text-sm">{{ sellingHolding.companyName }} • Available: {{ formatNumber(sellingHolding.quantity) }}</p>
+        </div>
+        <button (click)="closeSellModal()" class="text-gray-400 hover:text-white transition-colors">
+          <svg class="w-6 h-6" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div *ngIf="sellError" class="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+          {{ sellError }}
+        </div>
+
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Quantity to sell</label>
+          <input
+            type="number"
+            min="1"
+            class="w-full px-4 py-3 rounded-xl bg-gray-900/40 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
+            [(ngModel)]="sellQuantity" />
+        </div>
+
+        <div class="flex items-center justify-end gap-3">
+          <button (click)="closeSellModal()" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-colors">
+            Cancel
+          </button>
+          <button
+            (click)="sellFromHolding()"
+            [disabled]="selling"
+            class="px-5 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white border border-red-500/20 transition-colors">
+            {{ selling ? 'Selling...' : 'Sell' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

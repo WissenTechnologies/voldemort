@@ -86,19 +86,31 @@
     <p class="mt-1 text-sm text-gray-400">Company data will appear here once available.</p>
   </div>
 
-  <!-- Company Detail Modal -->
-  <div *ngIf="selectedCompany" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="closeDetail()">
-    <div class="glass-darker rounded-2xl border border-gray-700 max-w-6xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+  <!-- Company Detail Modal - Modern UI -->
+  <div *ngIf="selectedCompany" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" (click)="closeDetail()">
+    <div class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl border border-gray-700/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
       
-      <!-- Modal Header -->
-      <div class="p-6 border-b border-gray-700">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-white">{{ selectedCompany.name }}</h2>
-            <p class="text-gray-400">{{ selectedCompany.symbol || selectedCompany.name.substring(0, 4).toUpperCase() }}</p>
+      <!-- Modal Header with Gradient -->
+      <div class="relative p-8 bg-gradient-to-r from-blue-900/30 via-purple-900/20 to-gray-900/30 border-b border-gray-700/50">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-t-3xl"></div>
+        <div class="relative flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <span class="text-white font-bold text-xl">{{ selectedCompany.name.charAt(0) }}</span>
+            </div>
+            <div>
+              <h2 class="text-3xl font-bold text-white tracking-tight">{{ selectedCompany.name }}</h2>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="px-2 py-0.5 rounded-md bg-gray-800 text-gray-400 text-sm font-mono border border-gray-700">
+                  {{ selectedCompany.symbol || selectedCompany.name.substring(0, 4).toUpperCase() }}
+                </span>
+                <span class="text-gray-500">|</span>
+                <span class="text-gray-400 text-sm">{{ selectedCompany.sector || 'Technology' }}</span>
+              </div>
+            </div>
           </div>
-          <button (click)="closeDetail()" class="text-gray-400 hover:text-white transition-colors">
-            <svg class="w-6 h-6" viewBox="0 0 20 20" fill="currentColor">
+          <button (click)="closeDetail()" class="group p-2 rounded-xl bg-gray-800/50 hover:bg-gray-700 border border-gray-700/50 transition-all duration-200">
+            <svg class="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
             </svg>
           </button>
@@ -106,72 +118,207 @@
       </div>
 
       <!-- Modal Content -->
-      <div class="p-6">
-        <!-- Price Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="glass-dark rounded-xl p-4">
-            <p class="text-sm text-gray-400 mb-1">Current Price</p>
-            <p class="text-2xl font-bold text-white">
-              {{ selectedCompany.latestPrice ? formatPrice(selectedCompany.latestPrice) : '--' }}
-            </p>
-          </div>
-          <div class="glass-dark rounded-xl p-4">
-            <p class="text-sm text-gray-400 mb-1">Change</p>
-            <p class="text-2xl font-bold" [class]="getPriceChangeClass(selectedCompany.priceChange)">
-              {{ selectedCompany.priceChange ? formatPercent(selectedCompany.priceChangePercent) : '--' }}
-            </p>
-          </div>
-          <div class="glass-dark rounded-xl p-4">
-            <p class="text-sm text-gray-400 mb-1">Market Cap</p>
-            <p class="text-2xl font-bold text-white">
-              {{ selectedCompany.marketCap ? '₹' + (selectedCompany.marketCap / 1000000).toFixed(1) + 'M' : '--' }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Time Range Selector -->
-        <div class="flex space-x-2 mb-6">
-          <button *ngFor="let range of ['1M', '6M', '1Y']" 
-                  (click)="setTimeRange(range)"
-                  [class]="selectedTimeRange === range ? 'bg-blue-600 text-white' : 'glass-dark text-gray-300'"
-                  class="px-4 py-2 rounded-lg transition-colors">
-            {{ range }}
-          </button>
-        </div>
-
-        <!-- Stock Chart -->
-        <div class="glass-dark rounded-xl p-6 mb-6">
-          <h3 class="text-lg font-semibold text-white mb-4">Price Chart</h3>
-          <div *ngIf="stockDataLoading" class="flex items-center justify-center h-[250px]">
-            <div class="flex items-center space-x-2 text-gray-400">
-              <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
-              <span>Loading chart data...</span>
+      <div class="p-8 space-y-8">
+        <!-- Price Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Current Price -->
+          <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-5 border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="relative">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Current Price</p>
+              </div>
+              <p class="text-3xl font-bold text-white tracking-tight">
+                {{ selectedCompany.latestPrice ? formatPrice(selectedCompany.latestPrice) : '--' }}
+              </p>
+              <p class="text-xs text-gray-500 mt-1">Live updates every second</p>
             </div>
           </div>
-          <app-stock-chart 
-            *ngIf="!stockDataLoading"
-            [stockData]="stockChartData" 
-            [candlestickData]="candlestickData"
-            [height]="250">
-          </app-stock-chart>
+
+          <!-- Change -->
+          <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-5 border border-gray-700/50 hover:border-green-500/30 transition-all duration-300 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="relative">
+              <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Today's Change</p>
+              <p class="text-3xl font-bold" [class]="(selectedCompany.priceChange ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'">
+                {{ selectedCompany.priceChange !== undefined ? ((selectedCompany.priceChange >= 0 ? '+' : '') + selectedCompany.priceChange.toFixed(2)) : '--' }}
+              </p>
+              <p class="text-sm mt-1" [class]="(selectedCompany.priceChangePercent ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'">
+                {{ selectedCompany.priceChangePercent !== undefined ? formatPercent(selectedCompany.priceChangePercent) : '--' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Market Cap -->
+          <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-5 border border-gray-700/50 hover:border-purple-500/30 transition-all duration-300 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="relative">
+              <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Market Cap</p>
+              <p class="text-3xl font-bold text-white tracking-tight">
+                {{ selectedCompany.marketCap ? '₹' + (selectedCompany.marketCap / 1000000).toFixed(1) + 'M' : '--' }}
+              </p>
+              <p class="text-xs text-gray-500 mt-1">Total valuation</p>
+            </div>
+          </div>
+
+          <!-- Volume -->
+          <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-5 border border-gray-700/50 hover:border-orange-500/30 transition-all duration-300 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="relative">
+              <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Volume</p>
+              <p class="text-3xl font-bold text-white tracking-tight">2.4M</p>
+              <p class="text-xs text-gray-500 mt-1">Shares traded today</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Company Info -->
-        <div class="glass-dark rounded-xl p-6">
-          <h3 class="text-lg font-semibold text-white mb-4">Company Information</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <!-- Buy Stock -->
+        <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border border-gray-700/50 p-6">
+          <div class="flex items-center justify-between mb-4">
             <div>
-              <p class="text-gray-400">Sector</p>
-              <p class="text-white">{{ selectedCompany.sector || 'Technology' }}</p>
+              <h3 class="text-lg font-semibold text-white">Buy Stock</h3>
+              <p class="text-sm text-gray-400">Choose a portfolio and quantity</p>
             </div>
+            <button (click)="loadUserPortfolios()" class="text-sm text-gray-300 hover:text-white transition-colors" [disabled]="loadingPortfolios">
+              Refresh
+            </button>
+          </div>
+
+          <div *ngIf="tradeError" class="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+            {{ tradeError }}
+          </div>
+          <div *ngIf="tradeSuccess" class="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-200 text-sm">
+            {{ tradeSuccess }}
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <p class="text-gray-400">Description</p>
-              <p class="text-white">{{ selectedCompany.description || 'No description available' }}</p>
+              <label class="block text-sm text-gray-300 mb-1">Portfolio</label>
+              <select
+                class="w-full px-3 py-2 rounded-lg bg-gray-900/40 border border-gray-700 text-white"
+                [(ngModel)]="tradePortfolioId"
+                [disabled]="loadingPortfolios || portfolios.length === 0">
+                <option [ngValue]="null">Select portfolio</option>
+                <option *ngFor="let p of portfolios" [ngValue]="p.id">{{ p.name }} (ID: {{ p.id }})</option>
+              </select>
+              <div *ngIf="!loadingPortfolios && portfolios.length === 0" class="text-xs text-gray-400 mt-1">
+                No portfolios found. Create one in the Portfolio tab.
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm text-gray-300 mb-1">Quantity</label>
+              <input
+                type="number"
+                min="1"
+                class="w-full px-3 py-2 rounded-lg bg-gray-900/40 border border-gray-700 text-white"
+                [(ngModel)]="tradeQuantity" />
+            </div>
+
+            <div class="flex items-end">
+              <button
+                (click)="buyStock()"
+                [disabled]="trading || loadingPortfolios || !tradePortfolioId"
+                class="w-full px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium transition-colors">
+                {{ trading ? 'Buying...' : 'Buy' }}
+              </button>
             </div>
           </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border border-gray-700/50 p-6">
+          <!-- Time Range Selector -->
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-lg font-semibold text-white">Price Movement</h3>
+              <p class="text-sm text-gray-400">Real-time stock performance</p>
+            </div>
+            <div class="flex space-x-1 bg-gray-900/80 p-1 rounded-xl border border-gray-700/50">
+              <button *ngFor="let range of ['1D', '1W', '1M', '6M', '1Y']" 
+                      (click)="setTimeRange(range === '1D' ? '1M' : range === '1W' ? '1M' : range)"
+                      [class]="selectedTimeRange === (range === '1D' ? '1M' : range === '1W' ? '1M' : range) 
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' 
+                        : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                      class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                {{ range }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Stock Chart -->
+          <div class="relative bg-gray-900/30 rounded-xl overflow-hidden" style="height: 350px;">
+            <div *ngIf="stockDataLoading" class="absolute inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm z-10">
+              <div class="flex flex-col items-center space-y-3">
+                <div class="relative">
+                  <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                  <div class="absolute inset-0 w-12 h-12 border-4 border-purple-500/10 border-b-purple-500 rounded-full animate-spin" style="animation-duration: 1.5s;"></div>
+                </div>
+                <span class="text-gray-400 text-sm">Loading chart data...</span>
+              </div>
+            </div>
+            <app-stock-chart 
+              *ngIf="!stockDataLoading"
+              [stockData]="stockChartData" 
+              [candlestickData]="candlestickData"
+              [height]="350">
+            </app-stock-chart>
+          </div>
+        </div>
+
+        <!-- Company Info Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- About -->
+          <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border border-gray-700/50 p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">About</h3>
+            </div>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              {{ selectedCompany.description || selectedCompany.name + ' is a leading company in the ' + (selectedCompany.sector || 'Technology') + ' sector, committed to innovation and delivering value to shareholders.' }}
+            </p>
+          </div>
+
+          <!-- Key Statistics -->
+          <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border border-gray-700/50 p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Key Statistics</h3>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="p-3 rounded-xl bg-gray-900/50 border border-gray-800">
+                <p class="text-xs text-gray-500 mb-1">P/E Ratio</p>
+                <p class="text-lg font-semibold text-white">{{ selectedCompany.peRatio || '24.5' }}</p>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-900/50 border border-gray-800">
+                <p class="text-xs text-gray-500 mb-1">EPS</p>
+                <p class="text-lg font-semibold text-white">{{ selectedCompany.eps ? '₹' + selectedCompany.eps : '₹45.20' }}</p>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-900/50 border border-gray-800">
+                <p class="text-xs text-gray-500 mb-1">Industry</p>
+                <p class="text-sm font-medium text-white truncate">{{ selectedCompany.industry || 'Technology' }}</p>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-900/50 border border-gray-800">
+                <p class="text-xs text-gray-500 mb-1">Founded</p>
+                <p class="text-sm font-medium text-white">{{ selectedCompany.foundedYear || '1995' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Indicator -->
+        <div class="flex items-center justify-center gap-2 text-sm text-gray-500">
+          <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+          <span>Market is open • Live data updates every second</span>
         </div>
       </div>
     </div>
@@ -241,6 +388,16 @@
           <div>
             <label class="block text-sm text-gray-300 mb-1">Headquarters</label>
             <input type="text" formControlName="headquarters" class="w-full px-3 py-2 rounded-lg bg-gray-900/40 border border-gray-700 text-white" />
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-300 mb-1">Volume</label>
+            <input type="number" formControlName="volume" class="w-full px-3 py-2 rounded-lg bg-gray-900/40 border border-gray-700 text-white" />
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-300 mb-1">Value</label>
+            <input type="number" formControlName="value" class="w-full px-3 py-2 rounded-lg bg-gray-900/40 border border-gray-700 text-white" />
           </div>
 
           <div>

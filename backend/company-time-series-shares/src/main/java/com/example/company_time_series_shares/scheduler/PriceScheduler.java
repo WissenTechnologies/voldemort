@@ -35,8 +35,8 @@ public class PriceScheduler {
 
         LocalTime now = LocalTime.now();
 
-        LocalTime marketOpen = LocalTime.of(9, 0);
-        LocalTime marketClose = LocalTime.of(20, 30);
+        LocalTime marketOpen = LocalTime.of(0, 0);
+        LocalTime marketClose = LocalTime.of(23, 59);
 
         // Market closed → skip
         if (now.isBefore(marketOpen) || now.isAfter(marketClose)) {
