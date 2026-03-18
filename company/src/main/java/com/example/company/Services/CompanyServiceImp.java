@@ -29,13 +29,35 @@ public class CompanyServiceImp implements CompanyService {
                 .orElseThrow(() -> new RuntimeException("Company not found"));
     }
     @Override
-    public Company updateCompany(int id, Company updatedCompany) {
-        Company existing = getCompanyById(id);
-        existing.setCompanyName(updatedCompany.getCompanyName());
-        existing.setVolume(updatedCompany.getVolume());
-        existing.setValue(updatedCompany.getValue());
-        return repository.save(existing);
-    }
+public Company updateCompany(int id, Company updatedCompany) {
+
+    Company existing = getCompanyById(id);
+
+    // BASIC
+    existing.setCompanyName(updatedCompany.getCompanyName());
+    existing.setSymbol(updatedCompany.getSymbol());
+    existing.setSector(updatedCompany.getSector());
+    existing.setIndustry(updatedCompany.getIndustry());
+
+    // DETAILS
+    existing.setCeo(updatedCompany.getCeo());
+    existing.setFoundedYear(updatedCompany.getFoundedYear());
+    existing.setHeadquarters(updatedCompany.getHeadquarters());
+
+    // FINANCIAL
+    existing.setMarketCap(updatedCompany.getMarketCap());
+    existing.setPeRatio(updatedCompany.getPeRatio());
+    existing.setEps(updatedCompany.getEps());
+
+    // EXTRA
+    existing.setDescription(updatedCompany.getDescription());
+
+    // ❌ DO NOT TOUCH
+    // existing.setValue(...)
+    // existing.setVolume(...)
+
+    return repository.save(existing);
+}
     @Override
     public void deleteCompany(int id) {
         repository.deleteById(id);

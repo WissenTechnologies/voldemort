@@ -54,6 +54,8 @@ public class CompanyController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCompany(@PathVariable int id, @RequestBody Company company) {
         try {
+            company.setValue(null);
+            company.setVolume(null);
             Company updated = companyService.updateCompany(id, company);
             return new ResponseEntity<>(updated, HttpStatus.OK);
         } catch (RuntimeException e) {
