@@ -1,96 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Voldemort Share Market</title>
+    <title>Welcome to Voldemort</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
+            font-family: 'Outfit', sans-serif;
+            background-color: #0f172a;
+            color: #f1f5f9;
             margin: 0;
             padding: 0;
+            -webkit-font-smoothing: antialiased;
         }
-        .container {
-            max-width: 600px;
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #0f172a;
+            padding-bottom: 40px;
+        }
+        .main {
+            background-color: #1e293b;
             margin: 0 auto;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 600px;
+            border-spacing: 0;
+            color: #f1f5f9;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            margin-top: 40px;
         }
         .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 40px;
             text-align: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eeeeee;
         }
         .header h1 {
-            color: #28a745; /* stock green */
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: #ffffff;
         }
         .content {
-            padding: 20px 0;
+            padding: 40px;
+            text-align: left;
+        }
+        .content h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-top: 0;
+        }
+        .content p {
+            font-size: 16px;
             line-height: 1.6;
+            margin-bottom: 24px;
+            color: #94a3b8;
         }
-        .highlight {
-            color: #28a745;
+        .features {
+            background-color: #334155;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            border: 1px solid #475569;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            color: #cbd5e1;
+        }
+        .feature-icon {
+            color: #10b981;
+            margin-right: 12px;
             font-weight: bold;
-        }
-        .footer {
-            text-align: center;
-            padding: 10px 0;
-            font-size: 12px;
-            color: #777;
-            border-top: 1px solid #eeeeee;
-            margin-top: 20px;
         }
         .btn {
             display: inline-block;
-            padding: 10px 15px;
-            margin-top: 15px;
-            background-color: #28a745;
-            color: white;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 16px 32px;
+            border-radius: 8px;
             text-decoration: none;
-            border-radius: 5px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            width: 80%;
+            margin: 0 auto;
+            display: block;
+        }
+        .footer {
+            padding: 0 40px 40px;
+            text-align: center;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .divider {
+            height: 1px;
+            background-color: #334155;
+            margin: 40px 0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        
-        <div class="header">
-            <h1>📈 Welcome to Voldemort Share Market</h1>
-        </div>
+    <div class="wrapper">
+        <table class="main">
+            <tr>
+                <td class="header">
+                    <h1>WELCOME TO VOLDEMORT</h1>
+                </td>
+            </tr>
+            <tr>
+                <td class="content">
+                    <h2>Hello, <span th:text="${name}">Trader</span>!</h2>
+                    <p>We're thrilled to have you join our community of elite traders. Your account is now verified and ready for action.</p>
+                    
+                    <div class="features">
+                        <div class="feature-item"><span class="feature-icon">✓</span> Real-time Market Data</div>
+                        <div class="feature-item"><span class="feature-icon">✓</span> Advanced Portfolio Tracking</div>
+                        <div class="feature-item"><span class="feature-icon">✓</span> Smart Investment Insights</div>
+                        <div class="feature-item"><span class="feature-icon">✓</span> Professional Grade Execution</div>
+                    </div>
 
-        <div class="content">
-            <p>Hello <strong th:text="${name}">User</strong>,</p>
-
-            <p>We’re excited to have you onboard at <span class="highlight">Voldemort Share Market</span> 🚀</p>
-
-            <p>Your journey into the world of trading and smart investments starts now.</p>
-
-            <p><strong>Here’s what you can do next:</strong></p>
-            <ul>
-                <li>📊 Track real-time stock market trends</li>
-                <li>💼 Manage and monitor your portfolio</li>
-                <li>📈 Analyze stocks using smart insights</li>
-                <li>🔔 Set alerts for price movements</li>
-            </ul>
-
-            <p>Click below to start exploring:</p>
-
-            <a href="#" class="btn">Start Trading</a>
-
-            <p>If you have any questions, feel free to reach out — we’re here to help you grow your investments.</p>
-
-            <p>Happy Investing 💰,<br>
-            <strong>The Voldemort Team</strong></p>
-        </div>
-
-        <div class="footer">
-            &copy; 2026 Voldemort Share Market. All rights reserved.
-        </div>
-
+                    <a href="http://localhost:4200/dashboard" class="btn">Access Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="footer">
+                    <div class="divider"></div>
+                    <p>&copy; 2026 Voldemort Share Market. All rights reserved.</p>
+                    <p>The smarter way to navigate the markets.</p>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
-</html>
+</html>

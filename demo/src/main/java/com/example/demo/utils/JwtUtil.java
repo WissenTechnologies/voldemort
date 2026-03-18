@@ -13,7 +13,8 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "mySuperSecretKeyThatIsAtLeast32CharactersLong";
+    @org.springframework.beans.factory.annotation.Value("${JWT_SECRET:mySuperSecretKeyThatIsAtLeast32CharactersLong}")
+    private String SECRET;
 
     // create signing key
     private Key getSignKey() {

@@ -31,6 +31,9 @@ public class User {
     @Column(name = "role")
     private Role role;
 
+    @Column(nullable = false)
+    private boolean enabled = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -55,6 +58,7 @@ public class User {
     public String getPassword() { return password; }
     public String getUsername() { return username; }
     public Role getRole() { return role; }
+    public boolean isEnabled() { return enabled; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     // Setters
@@ -63,5 +67,6 @@ public class User {
     public void setPassword(String password) { this.password = password; }
     public void setUsername(String username) { this.username = username; }
     public void setRole(Role role) { this.role = role; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
