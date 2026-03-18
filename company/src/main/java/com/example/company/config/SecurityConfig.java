@@ -19,24 +19,30 @@ public class SecurityConfig {
         return new JwtFilter();
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
+    http
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
 
-                // READ - USER + ADMIN
-                .requestMatchers(HttpMethod.GET, "/api/companies/**")
-                .hasAnyRole("USER","ADMIN")
+                // GET ALL - /api/companies
+                .requestMatchers(HttpMethod.GET, "/api/companies")
+                .permitAll()
 
-                // CREATE UPDATE DELETE - ADMIN ONLY
-                .requestMatchers(HttpMethod.POST, "/api/companies/**")
+                // GET BY ID - /api/companies/{id}
+                .requestMatchers(HttpMethod.GET, "/api/companies/**")
+                .permitAll()
+
+                // CREATE - ADMIN ONLY
+                .requestMatchers(HttpMethod.POST, "/api/companies")
                 .hasRole("ADMIN")
 
+                // UPDATE - ADMIN ONLY
                 .requestMatchers(HttpMethod.PUT, "/api/companies/**")
                 .hasRole("ADMIN")
 
+                // DELETE - ADMIN ONLY
                 .requestMatchers(HttpMethod.DELETE, "/api/companies/**")
                 .hasRole("ADMIN")
 
@@ -44,6 +50,6 @@ public class SecurityConfig {
         )
         .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+}
 }
