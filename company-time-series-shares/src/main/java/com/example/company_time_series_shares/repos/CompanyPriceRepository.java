@@ -2,6 +2,7 @@ package com.example.company_time_series_shares.repos;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -14,4 +15,5 @@ public interface CompanyPriceRepository extends JpaRepository<CompanyPrice, Long
             LocalDateTime start,
             LocalDateTime end
     );
+    Optional<CompanyPrice> findTopByCompanyIdOrderByRecordedAtDesc(int companyId);
 }
