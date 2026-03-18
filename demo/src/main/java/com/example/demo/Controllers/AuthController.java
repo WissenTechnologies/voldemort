@@ -59,70 +59,90 @@ public class AuthController {
     private EmailService emailService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
+public ResponseEntity<?> register(@RequestBody User user) {
 
-        if(userRepository.findByEmail(user.getEmail()).isPresent()){
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body("Email already exists");
-        }
-        if(user.getRole() != null && user.getRole() == Role.ADMIN){
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body("Admin registration is not allowed");
-        }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(Role.USER);
-
-        userRepository.save(user);
-
-        // Send welcome email
-        try {
-            emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("User registered but unable to send welcome email. Error: " + e.getMessage());
-        }
-
-        return ResponseEntity.ok("User Registered Successfully");
+    if(userRepository.findByEmail(user.getEmail()).isPresent()){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
     }
+    if(userRepository.findByUsername(user.getUsername()).isPresent()){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+    }
+    if(user.getRole() != null && user.getRole() == Role.ADMIN){
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admin registration not allowed");
+    }
+    
+
+    user.setPassword(passwordEncoder.encode(user.getPassword()));
+    user.setRole(Role.USER);
+
+    // ❗ IMPORTANT
+    user.setEnabled(false);
+
+    userRepository.save(user);
+
+    // 🔥 Send OTP instead of welcome email
+    String otp = String.format("%06d", (int)(Math.random() * 999999));
+
+    OtpToken otpToken = new OtpToken();
+    otpToken.setUser(user);
+    otpToken.setOtp(otp);
+    otpToken.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+    otpToken.setUsed(false);
+
+    otpTokenRepository.save(otpToken);
+
+    emailService.sendOtpEmail(user.getEmail(), otp);
+
+    return ResponseEntity.ok("OTP sent to email. Please verify.");
+}
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
-        try {
+    try {
 
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
+        // Step 1: Authenticate credentials
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
 
-            if(authentication.isAuthenticated()){
+        if(authentication.isAuthenticated()){
 
-                User user = userRepository.findByEmail(request.getEmail()).get();
+            // Step 2: Fetch user from DB
+            User user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-                String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-
-                return ResponseEntity.ok(token);
+            // 🔥 Step 3: Check email verification
+            if(!user.isEnabled()){
+                return ResponseEntity
+                        .status(HttpStatus.FORBIDDEN)
+                        .body("Please verify your email before logging in");
             }
 
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Login Failed");
+            // Step 4: Generate JWT
+            String token = jwtUtil.generateToken(
+                    user.getEmail(),
+                    user.getRole().name()
+            );
 
-        } catch (Exception e) {
-
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid Email or Password");
+            // Step 5: Return token
+            return ResponseEntity.ok(token);
         }
-    }
 
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Login Failed");
+
+    } catch (Exception e) {
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Invalid Email or Password");
+    }
+}
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
@@ -309,6 +329,40 @@ public class AuthController {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body("Please verify your OTP first before resetting password");
     }
+
+    @PostMapping("/verify-email")
+public ResponseEntity<?> verifyEmail(@RequestBody VerifyOtpRequest request) {
+
+    Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+    if (!userOptional.isPresent()) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+    }
+
+    User user = userOptional.get();
+
+    Optional<OtpToken> otpTokenOptional =
+            otpTokenRepository.findByOtpAndUserAndUsedFalse(request.getOtp(), user);
+
+    if (!otpTokenOptional.isPresent()) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid OTP");
+    }
+
+    OtpToken otpToken = otpTokenOptional.get();
+
+    if (otpToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("OTP expired");
+    }
+
+    otpToken.setUsed(true);
+    otpTokenRepository.save(otpToken);
+
+    // 🔥 ACTIVATE USER
+    user.setEnabled(true);
+    userRepository.save(user);
+
+    return ResponseEntity.ok("Email verified successfully");
+}
 
 
 }

@@ -34,6 +34,9 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private boolean enabled = false;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -64,4 +67,11 @@ public class User {
     public void setUsername(String username) { this.username = username; }
     public void setRole(Role role) { this.role = role; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public boolean isEnabled() {
+    return enabled;
+}
+
+public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+}
 }
