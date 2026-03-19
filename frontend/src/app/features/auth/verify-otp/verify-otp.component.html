@@ -1,0 +1,95 @@
+<div class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4 sm:p-6 lg:p-8">
+  <div class="max-w-md w-full space-y-8 glass-darker rounded-2xl shadow-2xl p-8 sm:p-10 border border-gray-700 animate-slide-up">
+    
+    <!-- Header -->
+    <div class="text-center">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-2">
+        Verify OTP
+      </h2>
+      <p class="text-sm sm:text-base text-gray-400">
+        Enter the 6-digit OTP sent to your email
+      </p>
+      <p class="text-xs text-gray-500 mt-1">{{ email }}</p>
+    </div>
+
+    <!-- Success State -->
+    <div *ngIf="isSubmitted" class="text-center">
+      <app-alert-message 
+        type="success" 
+        [message]="successMessage">
+      </app-alert-message>
+      <p class="text-gray-400 mt-4">Redirecting to reset password...</p>
+    </div>
+
+    <!-- Form -->
+    <div *ngIf="!isSubmitted">
+      <!-- Error Alert -->
+      <app-alert-message 
+        *ngIf="errorMessage" 
+        type="error" 
+        [message]="errorMessage"
+        (dismissed)="errorMessage = ''">
+      </app-alert-message>
+
+      <form [formGroup]="verifyForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
+        <div>
+          <label for="otp" class="block text-sm font-medium text-gray-300 mb-1">
+            OTP Code
+          </label>
+          <div class="relative">
+            <input
+              type="text"
+              id="otp"
+              formControlName="otp"
+              placeholder="000000"
+              maxlength="6"
+              class="appearance-none block w-full px-4 py-3 border border-gray-600 rounded-lg 
+                     placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white 
+                     focus:border-transparent transition duration-150 ease-in-out sm:text-sm
+                     bg-gray-800/50 focus:bg-gray-800 text-white text-center tracking-[0.5em] text-lg"
+              [class.border-red-300]="otp?.invalid && otp?.touched"
+            >
+          </div>
+          <div *ngIf="otp?.invalid && otp?.touched" class="mt-1 text-xs text-red-400 animate-fade-in">
+            <span *ngIf="otp?.errors?.['required']">OTP is required</span>
+            <span *ngIf="otp?.errors?.['minlength'] || otp?.errors?.['maxlength']">OTP must be 6 digits</span>
+            <span *ngIf="otp?.errors?.['pattern']">Only numbers allowed</span>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="verifyForm.invalid || isLoading"
+          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg 
+                 shadow-sm text-sm font-medium text-white bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black 
+                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white 
+                 transition duration-150 ease-in-out transform hover:scale-[1.02]
+                 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <app-loading-spinner *ngIf="isLoading" size="sm" color="white"></app-loading-spinner>
+          <span *ngIf="!isLoading">Verify OTP</span>
+        </button>
+
+        <!-- Resend OTP -->
+        <div class="text-center">
+          <p class="text-sm text-gray-400 mb-2">Didn't receive the OTP?</p>
+          <button
+            type="button"
+            (click)="resendOtp()"
+            [disabled]="isLoading"
+            class="text-sm text-blue-400 hover:text-blue-300 transition duration-150 ease-in-out disabled:opacity-50"
+          >
+            Resend OTP
+          </button>
+        </div>
+
+        <!-- Back to Login -->
+        <div class="text-center">
+          <a routerLink="/login" class="text-sm text-gray-400 hover:text-white transition duration-150 ease-in-out">
+            ← Back to Login
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -22,6 +22,7 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
   showConfirmPassword = false;
   token: string = '';
   email: string = '';
+  otpCode: string = '';
   
   private subscription: Subscription = new Subscription();
 
@@ -41,13 +42,26 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.token = this.route.snapshot.queryParams['token'] || '';
     this.email = this.route.snapshot.queryParams['email'] || '';
+    this.otpCode = this.route.snapshot.queryParams['otp'] || '';
+    const verified = this.route.snapshot.queryParams['verified'] === 'true';
     
     if (this.token) {
+      // Token-based reset flow
       this.isVerifyingToken = false;
       this.isValidToken = true;
+      // Remove OTP field for token-based flow
+      this.resetForm.removeControl('otp');
+    } else if (this.email && verified) {
+      // OTP-based reset flow after verification
+      this.isVerifyingToken = false;
+      this.isValidToken = true;
+      // OTP already verified on verify-otp page; don't ask for it again
+      this.resetForm.removeControl('otp');
     } else {
+      // No valid session, redirect to forgot-password
       this.isVerifyingToken = true;
       this.isValidToken = false;
+      this.router.navigate(['/forgot-password']);
     }
   }
 
@@ -73,6 +87,10 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
           this.isSubmitted = true;
           this.successMessage = 'Password has been reset successfully.';
           this.isLoading = false;
+          // Redirect to login after 2 seconds
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 2000);
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Failed to reset password';
@@ -81,11 +99,15 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
       });
     } else {
       // OTP-based reset flow (new method)
-      this.authService.resetPassword(this.email, this.resetForm.value.otp, this.resetForm.value.password, this.resetForm.value.confirmPassword).subscribe({
+      this.authService.resetPassword(this.email, this.otpCode, this.resetForm.value.password, this.resetForm.value.confirmPassword).subscribe({
         next: () => {
           this.isSubmitted = true;
           this.successMessage = 'Password has been reset successfully.';
           this.isLoading = false;
+          // Redirect to login after 2 seconds
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 2000);
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Failed to reset password';

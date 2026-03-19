@@ -208,12 +208,10 @@ export class AuthService {
       return throwError(() => new Error('Passwords do not match'));
     }
 
-    return this.http.post(`${this.apiUrl}/reset-password`, { 
+    return this.http.post(`${this.apiUrl}/reset-password-with-otp`, { 
       email,
-      otp,
-      newPassword,
-      confirmPassword 
-    }).pipe(
+      newPassword
+    }, { responseType: 'text' }).pipe(
       tap(response => {
         console.log('Password reset successful:', response);
       }),
@@ -237,7 +235,9 @@ export class AuthService {
   }
 
   verifyOtp(email: string, otp: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/verify-otp`, { email, otp })
+    return this.http.post(`${this.apiUrl}/verify-otp`, { email, otp }, { 
+      responseType: 'text' 
+    })
       .pipe(
         tap(response => {
           console.log('OTP verification successful:', response);
