@@ -1,12 +1,9 @@
 package com.example.order.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.order.dto.OrderRequest;
 import com.example.order.service.OrderService;
@@ -19,64 +16,81 @@ public class OrderController {
     @Autowired
     private OrderService service;
 
+    // BUY
     @PostMapping("/buy")
     public ResponseEntity<?> buy(@RequestBody OrderRequest req) {
 
-        if (req.getUserId() == null || req.getUserId() <= 0) {
-            return ResponseEntity.badRequest().body("Invalid userId");
-        }
-
-        if (req.getPortfolioId() == null || req.getPortfolioId() <= 0) {
-            return ResponseEntity.badRequest().body("Invalid portfolioId");
-        }
-
-        if (req.getCompanyId() == null || req.getCompanyId() <= 0) {
-            return ResponseEntity.badRequest().body("Invalid companyId");
+        // validation
+        if (req.getUserId() == null || req.getPortfolioId() == null || req.getCompanyId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Missing required fields");
         }
 
         if (req.getQuantity() == null || req.getQuantity() <= 0) {
-            return ResponseEntity.badRequest().body("Invalid quantity");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid quantity");
         }
 
         try {
-            return ResponseEntity.ok(service.buy(req));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.buy(req));
+
         } catch (RuntimeException e) {
-            // Downstream validation failures (e.g. not enough shares) should be readable to client
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Buy failed: " + e.getMessage());
+
+            String msg = e.getMessage();
+
+            // business errors
+            if (msg.contains("Not enough shares") || msg.contains("Insufficient")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(msg);
+            }
+
+            // not found cases
+            if (msg.contains("not found") || msg.contains("Price unavailable")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
+            }
+
+            // fallback
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(msg);
         }
     }
 
+    // SELL
     @PostMapping("/sell")
     public ResponseEntity<?> sell(@RequestBody OrderRequest req) {
 
-        if (req.getUserId() == null || req.getUserId() <= 0) {
-            return ResponseEntity.badRequest().body("Invalid userId");
-        }
-
-        if (req.getPortfolioId() == null || req.getPortfolioId() <= 0) {
-            return ResponseEntity.badRequest().body("Invalid portfolioId");
-        }
-
-        if (req.getCompanyId() == null || req.getCompanyId() <= 0) {
-            return ResponseEntity.badRequest().body("Invalid companyId");
+        // validation
+        if (req.getUserId() == null || req.getPortfolioId() == null || req.getCompanyId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Missing required fields");
         }
 
         if (req.getQuantity() == null || req.getQuantity() <= 0) {
-            return ResponseEntity.badRequest().body("Invalid quantity");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid quantity");
         }
 
         try {
-            return ResponseEntity.ok(service.sell(req));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.sell(req));
+
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Sell failed: " + e.getMessage());
+
+            String msg = e.getMessage();
+
+            // business errors
+            if (msg.contains("Insufficient") || msg.contains("not enough")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(msg);
+            }
+
+            // not found
+            if (msg.contains("not found") || msg.contains("Price unavailable")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(msg);
+            }
+
+            // fallback
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(msg);
         }
     }
 }

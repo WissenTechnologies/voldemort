@@ -78,6 +78,52 @@
           </div>
         </div>
 
+        <div class="glass-dark rounded-2xl p-6 border border-gray-700">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-lg font-semibold text-white">Wallet</h4>
+            <div *ngIf="walletLoading" class="text-sm text-gray-400">Loading...</div>
+          </div>
+
+          <div *ngIf="walletError" class="mb-4 text-sm text-red-300">
+            {{ walletError }}
+          </div>
+
+          <div *ngIf="!walletLoading && wallet" class="mb-6">
+            <div class="flex items-center justify-between py-3 border-b border-gray-700">
+              <span class="text-sm font-medium text-gray-400">User ID</span>
+              <span class="text-sm font-semibold text-white">#{{ wallet.userId }}</span>
+            </div>
+            <div class="flex items-center justify-between py-3">
+              <span class="text-sm font-medium text-gray-400">Balance</span>
+              <span class="text-xl font-bold text-white">₹{{ wallet.balance }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="!walletLoading && !wallet && !walletError" class="mb-6 text-sm text-gray-400">
+            No wallet found. Add money to initialize your wallet.
+          </div>
+
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-gray-300">Add Money</label>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+              <input type="number"
+                     [(ngModel)]="addAmount"
+                     [ngModelOptions]="{ standalone: true }"
+                     min="1"
+                     class="w-full sm:flex-1 px-4 py-3 dark-input rounded-xl focus:ring-2 focus:ring-white focus:border-transparent"
+                     placeholder="Enter amount" />
+              <button type="button"
+                      (click)="addMoney()"
+                      [disabled]="addLoading"
+                      class="px-6 py-3 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-xl hover:from-gray-800 hover:to-black transition-colors shadow-lg disabled:opacity-60">
+                {{ addLoading ? 'Adding...' : 'Add' }}
+              </button>
+            </div>
+            <div *ngIf="addError" class="text-sm text-red-300">{{ addError }}</div>
+            <div *ngIf="addSuccess" class="text-sm text-green-300">{{ addSuccess }}</div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-4">
             <div>
