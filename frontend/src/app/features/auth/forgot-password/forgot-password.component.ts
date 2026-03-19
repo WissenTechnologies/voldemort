@@ -35,13 +35,22 @@ export class ForgotPasswordComponent {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.authService.forgotPassword(this.forgotForm.value.email).subscribe({
-      next: () => {
-        this.isSubmitted = true;
-        this.successMessage = 'OTP has been sent to your email address.';
+    const email = this.forgotForm.value.email;
+    console.log('Sending OTP to:', email);
+    
+    // Auto-redirect after 3 seconds regardless of API response
+    setTimeout(() => {
+      console.log('Auto-redirecting to verify-otp with email:', email);
+      this.router.navigate(['/verify-otp'], { queryParams: { email: email } });
+    }, 3000);
+    
+    this.authService.forgotPassword(email).subscribe({
+      next: (response) => {
+        console.log('OTP sent successfully:', response);
         this.isLoading = false;
       },
       error: (error) => {
+        console.error('Failed to send OTP:', error);
         this.errorMessage = error.error?.message || 'Failed to send OTP';
         this.isLoading = false;
       }

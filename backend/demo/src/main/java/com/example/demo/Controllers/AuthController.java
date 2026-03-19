@@ -2,9 +2,9 @@ package com.example.demo.Controllers;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -61,6 +61,9 @@ public class AuthController {
 
     @Autowired
     private EmailService emailService;
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -195,34 +198,36 @@ public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 }
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+        try {
+            Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
 
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
 
-            // Generate Token
-            String token = UUID.randomUUID().toString();
+                otpTokenRepository.deleteByUser(user);
 
-            // Store Token
-            PasswordResetToken resetToken = new PasswordResetToken(token, user, LocalDateTime.now().plusMinutes(30));
-            tokenRepository.save(resetToken);
+                String otp = String.format("%06d", (int)(Math.random() * 999999));
 
-            // Send Email
-            String resetLink = "http://localhost:4200/reset-password?token=" + token;
-            try {
-                emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
-            } catch (Exception e) {
-                return ResponseEntity
-                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Unable to send password reset email");
+                OtpToken otpToken = new OtpToken();
+                otpToken.setUser(user);
+                otpToken.setOtp(otp);
+                otpToken.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+                otpToken.setUsed(false);
+                otpTokenRepository.save(otpToken);
+
+                emailService.sendPasswordResetOtpEmail(user.getEmail(), otp);
+                return ResponseEntity.ok("OTP sent to your email. Please verify.");
             }
 
-            return ResponseEntity.ok("Password reset link sent to your email");
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("User not found");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("forgot-password failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
         }
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body("User not found");
     }
 
     @PostMapping("/reset-password")
@@ -259,38 +264,39 @@ public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
     @PostMapping("/send-otp")
     public ResponseEntity<?> sendOtp(@RequestBody SendOtpRequest request) {
-        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
-
-        if (!userOptional.isPresent()) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("User not found with email: " + request.getEmail());
-        }
-
-        User user = userOptional.get();
-
-        // Invalidate old OTPs
-        otpTokenRepository.deleteByUser(user);
-
-        // Generate OTP (6 digits)
-        String otp = String.format("%06d", (int)(Math.random() * 999999));
-
-        // Save OTP token
-        OtpToken otpToken = new OtpToken();
-        otpToken.setUser(user);
-        otpToken.setOtp(otp);
-        otpToken.setExpiresAt(LocalDateTime.now().plusMinutes(10));
-        otpToken.setUsed(false);
-        otpTokenRepository.save(otpToken);
-
-        // Send OTP via email
         try {
-            emailService.sendOtpEmail(user.getEmail(), otp);
+            Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+            if (!userOptional.isPresent()) {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("User not found with email: " + request.getEmail());
+            }
+
+            User user = userOptional.get();
+
+            // Invalidate old OTPs
+            otpTokenRepository.deleteByUser(user);
+
+            // Generate OTP (6 digits)
+            String otp = String.format("%06d", (int)(Math.random() * 999999));
+
+            // Save OTP token
+            OtpToken otpToken = new OtpToken();
+            otpToken.setUser(user);
+            otpToken.setOtp(otp);
+            otpToken.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+            otpToken.setUsed(false);
+            otpTokenRepository.save(otpToken);
+
+            // Send OTP via email
+            emailService.sendPasswordResetOtpEmail(user.getEmail(), otp);
             return ResponseEntity.ok("OTP sent successfully to your email. Valid for 10 minutes.");
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to send OTP email. Please try again.");
+                    .body("send-otp failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
@@ -342,36 +348,25 @@ public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
         User user = userOptional.get();
 
-        // Check if there's a recently verified OTP
-        Optional<OtpToken> otpTokenOptional = otpTokenRepository.findByUserAndUsedFalse(user);
+        // Find verified OTP (used=true) that is still valid
+        Optional<OtpToken> verifiedTokenOptional = otpTokenRepository.findTopByUserAndUsedTrueOrderByExpiresAtDesc(user);
 
-        if (otpTokenOptional.isPresent() && otpTokenOptional.get().isUsed()) {
-            // OTP has been verified, allow password reset
-            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-            userRepository.save(user);
+        if (verifiedTokenOptional.isPresent()) {
+            OtpToken otpToken = verifiedTokenOptional.get();
 
-            // Clean up OTP tokens
-            otpTokenRepository.deleteByUser(user);
-
-            return ResponseEntity.ok("Password reset successfully");
-        }
-
-        // Alternative: Check if there's a recently used (verified) OTP
-        Optional<OtpToken> verifiedOtpOptional = otpTokenRepository.findByUserAndUsedFalse(user);
-
-        if (verifiedOtpOptional.isPresent()) {
-            OtpToken otpToken = verifiedOtpOptional.get();
-
-            // Even if not used in this call, if we have a valid token, we can proceed
+            // Check if still valid (not expired)
             if (otpToken.getExpiresAt().isAfter(LocalDateTime.now())) {
                 user.setPassword(passwordEncoder.encode(request.getNewPassword()));
                 userRepository.save(user);
 
-                // Mark OTP as used and clean up
-                otpToken.setUsed(true);
-                otpTokenRepository.save(otpToken);
+                // Clean up OTP tokens
+                otpTokenRepository.deleteByUser(user);
 
                 return ResponseEntity.ok("Password reset successfully");
+            } else {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body("OTP has expired. Please request a new OTP.");
             }
         }
 

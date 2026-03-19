@@ -1,5 +1,6 @@
 package com.example.demo.Services;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,9 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
 
+    @Value("${app.base-url}")
+    private String baseUrl;
+
     public EmailService(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
@@ -24,6 +28,13 @@ public class EmailService {
         ctx.setVariable("otp", otp);
         ctx.setVariable("expiry", "10 minutes");
         sendEmail(to, "Your StockApp Verification Code", "otp-email", ctx);
+    }
+
+    public void sendPasswordResetOtpEmail(String to, String otp) {
+        Context ctx = new Context();
+        ctx.setVariable("otp", otp);
+        ctx.setVariable("expiry", "10 minutes");
+        sendEmail(to, "Reset Your StockApp Password", "reset-password", ctx);
     }
 
     public void sendWelcomeEmail(String to, String name) {
