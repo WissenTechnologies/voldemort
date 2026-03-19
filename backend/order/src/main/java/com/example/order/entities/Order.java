@@ -31,6 +31,13 @@ public class Order {
     private String status;
 
     private LocalDateTime createdAt;
+    // ADD THESE FIELDS
+
+private Double targetPrice;     // for LIMIT / STOP LOSS
+private String orderMode;       // MARKET / LIMIT / STOP_LOSS
+
+private Double executedPrice;   // actual execution price
+private LocalDateTime executedAt;
 
     public Order() {}
 
@@ -128,6 +135,16 @@ public class Order {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+   public Double getTargetPrice() { return targetPrice; }
+public void setTargetPrice(Double targetPrice) { this.targetPrice = targetPrice; }
 
+public String getOrderMode() { return orderMode; }
+public void setOrderMode(String orderMode) { this.orderMode = orderMode; }
+
+public Double getExecutedPrice() { return executedPrice; }
+public void setExecutedPrice(Double executedPrice) { this.executedPrice = executedPrice; }
+
+public LocalDateTime getExecutedAt() { return executedAt; }
+public void setExecutedAt(LocalDateTime executedAt) { this.executedAt = executedAt; }
     
 }

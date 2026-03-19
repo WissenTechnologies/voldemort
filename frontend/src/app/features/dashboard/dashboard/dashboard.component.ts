@@ -42,6 +42,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     window.removeEventListener('resize', this.resizeListener);
   }
 
+  private isMissingUsername(username: string | null | undefined): boolean {
+    const normalized = (username ?? '').trim().toLowerCase();
+    return !normalized || normalized === 'unknown';
+  }
+
+  get displayName(): string {
+    if (!this.user) return 'User';
+    if (!this.isMissingUsername(this.user.username)) return this.user.username;
+    return this.user.email || 'User';
+  }
+
+  get displayInitial(): string {
+    const value = this.displayName;
+    return value ? value.charAt(0).toUpperCase() : 'U';
+  }
+
+  get shouldShowSecondaryEmail(): boolean {
+    return !!this.user?.email && !this.isMissingUsername(this.user?.username);
+  }
+
   handleResize(): void {
     if (window.innerWidth >= 1024) {
       this.isSidebarOpen = true;   // Desktop → always open

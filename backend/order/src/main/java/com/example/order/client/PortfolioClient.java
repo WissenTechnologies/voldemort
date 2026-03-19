@@ -36,4 +36,13 @@ public class PortfolioClient {
 
         restTemplate.postForObject(BASE_URL + "/sell", req, Object.class);
     }
+    // rollback buy → sell back
+public void rollbackBuy(Long portfolioId, Long companyId, int qty, double price) {
+    sell(portfolioId, companyId, qty, price);
+}
+
+// rollback sell → buy back
+public void rollbackSell(Long portfolioId, Long companyId, String name, int qty, double price) {
+    buy(portfolioId, companyId, name, qty, price);
+}
 }

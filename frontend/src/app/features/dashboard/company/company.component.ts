@@ -8,6 +8,7 @@ import { OrderService } from '../../../core/services/order.service';
 import { CompanyWithLatestPrice, CompanyPrice, CandlestickData } from '../../../core/models/company.model';
 import { Portfolio } from '../../../core/models/portfolio.model';
 import { Subscription, interval } from 'rxjs';
+import { OrderMode, OrderStatus, OrderType, OrderRequest } from '../../../core/models/order.model';
 
 @Component({
   selector: 'app-company',
@@ -39,6 +40,8 @@ export class CompanyComponent implements OnInit, OnDestroy {
   loadingPortfolios = false;
   tradePortfolioId: number | null = null;
   tradeQuantity = 1;
+  tradeOrderMode: OrderMode = 'MARKET';
+  tradeTargetPrice: number | null = null;
   trading = false;
   tradeError: string | null = null;
   tradeSuccess: string | null = null;
@@ -362,6 +365,8 @@ export class CompanyComponent implements OnInit, OnDestroy {
     this.tradeError = null;
     this.tradeSuccess = null;
     this.tradeQuantity = 1;
+    this.tradeOrderMode = 'MARKET';
+    this.tradeTargetPrice = null;
     this.tradePortfolioId = null;
     this.loadUserPortfolios();
   }
@@ -426,15 +431,22 @@ export class CompanyComponent implements OnInit, OnDestroy {
       this.tradeError = 'Quantity must be greater than 0.';
       return;
     }
+    if (this.tradeOrderMode !== 'MARKET' && (!this.tradeTargetPrice || this.tradeTargetPrice <= 0)) {
+      this.tradeError = 'Target price is required for LIMIT and STOP LOSS orders.';
+      return;
+    }
 
     this.trading = true;
+    const orderRequest: OrderRequest = {
+      userId,
+      portfolioId,
+      companyId,
+      quantity: this.tradeQuantity,
+      orderMode: this.tradeOrderMode,
+      targetPrice: this.tradeOrderMode !== 'MARKET' ? this.tradeTargetPrice || undefined : undefined
+    };
     this.subscriptions.push(
-      this.orderService.buyStock({
-        userId,
-        portfolioId,
-        companyId,
-        quantity: this.tradeQuantity
-      }).subscribe({
+      this.orderService.buyStock(orderRequest).subscribe({
         next: () => {
           this.trading = false;
           this.tradeSuccess = 'Bought successfully';

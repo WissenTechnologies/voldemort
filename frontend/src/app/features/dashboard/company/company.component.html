@@ -192,7 +192,7 @@
             {{ tradeSuccess }}
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label class="block text-sm text-gray-300 mb-1">Portfolio</label>
               <select
@@ -208,6 +208,17 @@
             </div>
 
             <div>
+              <label class="block text-sm text-gray-300 mb-1">Order Type</label>
+              <select
+                class="w-full px-3 py-2 rounded-lg bg-gray-900/40 border border-gray-700 text-white"
+                [(ngModel)]="tradeOrderMode">
+                <option value="MARKET">Market Order</option>
+                <option value="LIMIT">Limit Order</option>
+                <option value="STOP_LOSS">Stop Loss</option>
+              </select>
+            </div>
+
+            <div>
               <label class="block text-sm text-gray-300 mb-1">Quantity</label>
               <input
                 type="number"
@@ -216,7 +227,22 @@
                 [(ngModel)]="tradeQuantity" />
             </div>
 
-            <div class="flex items-end">
+            <div *ngIf="tradeOrderMode !== 'MARKET'">
+              <label class="block text-sm text-gray-300 mb-1">
+                Target Price (₹)
+                <span *ngIf="tradeOrderMode === 'LIMIT'" class="text-xs text-gray-500 ml-1">(Buy when price ≤ target)</span>
+                <span *ngIf="tradeOrderMode === 'STOP_LOSS'" class="text-xs text-gray-500 ml-1">(Buy when price ≥ target)</span>
+              </label>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                class="w-full px-3 py-2 rounded-lg bg-gray-900/40 border border-gray-700 text-white"
+                [(ngModel)]="tradeTargetPrice"
+                placeholder="Enter target price" />
+            </div>
+
+            <div class="flex items-end" [class.md:col-start-4]="tradeOrderMode === 'MARKET'">
               <button
                 (click)="buyStock()"
                 [disabled]="trading || loadingPortfolios || !tradePortfolioId"

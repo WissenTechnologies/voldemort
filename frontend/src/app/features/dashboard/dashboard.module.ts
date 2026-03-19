@@ -9,6 +9,7 @@ import { CompanyComponent } from './company/company.component';
 import { UsersComponent } from './users/users.component';
 import { StockChartComponent } from './components/stock-chart/stock-chart.component';
 import { PortfolioComponent } from './portfolio/portfolio.component';
+import { OrdersComponent } from './orders/orders.component';
 
 import { SharedModule } from '../../shared/shared.module';
 
@@ -21,6 +22,7 @@ const dashboardRoutes: Routes = [
       { path: '', redirectTo: 'company', pathMatch: 'full' }, // Redirect to company by default
       { path: 'company', component: CompanyComponent },
       { path: 'portfolio', component: PortfolioComponent },
+      { path: 'orders', component: OrdersComponent },
       { path: 'users', component: UsersComponent },
       { path: 'profile', component: ProfileComponent },
       { path: '**', redirectTo: 'company' } // Wildcard within dashboard
@@ -34,6 +36,7 @@ const dashboardRoutes: Routes = [
     ProfileComponent,
     CompanyComponent,
     PortfolioComponent,
+    OrdersComponent,
     UsersComponent,
     StockChartComponent
   ],
@@ -48,6 +51,8 @@ const dashboardRoutes: Routes = [
     DashboardComponent,
     ProfileComponent,
     CompanyComponent,
+    PortfolioComponent,
+    OrdersComponent,
     UsersComponent,
     StockChartComponent
   ]

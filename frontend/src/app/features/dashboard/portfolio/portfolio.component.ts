@@ -1,6 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
+import { startWith, switchMap } from 'rxjs/operators';
+
+import { OrderMode, OrderRequest } from '../../../core/models/order.model';
 
 import { AuthService } from '../../../core/services/auth';
 import { OrderService } from '../../../core/services/order.service';
@@ -33,17 +36,21 @@ export class PortfolioComponent implements OnInit, OnDestroy {
 
   sellingHolding: Holding | null = null;
   sellQuantity = 1;
+  sellOrderMode: OrderMode = 'MARKET';
+  sellTargetPrice: number | null = null;
   selling = false;
   sellError: string | null = null;
   sellSuccess: string | null = null;
 
   private subscriptions: Subscription[] = [];
+  private pricePollingSub: Subscription | null = null;
 
   constructor(
     private authService: AuthService,
     private portfolioService: PortfolioService,
     private orderService: OrderService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -62,6 +69,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopPricePolling();
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
@@ -78,12 +86,14 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.portfolioService.getPortfoliosByUserId(userId).subscribe({
         next: (res) => {
-          this.portfolios = Array.isArray(res?.data) ? res.data : [];
+          this.portfolios = Array.isArray(res?.data) ? [...res.data] : [];
           this.loadingPortfolios = false;
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.loadingPortfolios = false;
           this.portfoliosError = err?.error?.message || err?.message || 'Failed to load portfolios';
+          this.cdr.detectChanges();
         }
       })
     );
@@ -133,26 +143,35 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   }
 
   selectPortfolio(p: Portfolio): void {
+    this.stopPricePolling();
     this.selectedPortfolio = p;
     this.selectedSummary = null;
     this.holdings = [];
     this.holdingsError = null;
 
+    this.cdr.detectChanges();
+
     this.fetchHoldings(p.id);
+    this.startPricePolling(p.id);
   }
 
   closeSelected(): void {
+    this.stopPricePolling();
     this.selectedPortfolio = null;
     this.selectedSummary = null;
     this.holdings = [];
     this.holdingsError = null;
     this.closeSellModal();
+
+    this.cdr.detectChanges();
   }
 
   openSellModal(h: Holding): void {
     if (!this.selectedPortfolio) return;
     this.sellingHolding = h;
     this.sellQuantity = 1;
+    this.sellOrderMode = 'MARKET';
+    this.sellTargetPrice = null;
     this.sellError = null;
     this.sellSuccess = null;
   }
@@ -160,6 +179,8 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   closeSellModal(): void {
     this.sellingHolding = null;
     this.sellQuantity = 1;
+    this.sellOrderMode = 'MARKET';
+    this.sellTargetPrice = null;
     this.selling = false;
     this.sellError = null;
   }
@@ -197,14 +218,22 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.sellOrderMode !== 'MARKET' && (!this.sellTargetPrice || this.sellTargetPrice <= 0)) {
+      this.sellError = 'Target price is required for LIMIT and STOP LOSS orders.';
+      return;
+    }
+
     this.selling = true;
+    const orderRequest: OrderRequest = {
+      userId,
+      portfolioId,
+      companyId: holding.companyId,
+      quantity: this.sellQuantity,
+      orderMode: this.sellOrderMode,
+      targetPrice: this.sellOrderMode !== 'MARKET' ? this.sellTargetPrice || undefined : undefined
+    };
     this.subscriptions.push(
-      this.orderService.sellStock({
-        userId,
-        portfolioId,
-        companyId: holding.companyId,
-        quantity: this.sellQuantity
-      }).subscribe({
+      this.orderService.sellStock(orderRequest).subscribe({
         next: () => {
           this.selling = false;
           this.sellSuccess = 'Sold successfully';
@@ -223,19 +252,50 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     this.loadingHoldings = true;
     this.holdingsError = null;
 
+    this.cdr.detectChanges();
+
     this.subscriptions.push(
       this.portfolioService.getPortfolioByPortfolioId(portfolioId).subscribe({
         next: (res) => {
           this.selectedSummary = res?.data || null;
           this.holdings = Array.isArray(this.selectedSummary?.holdings) ? this.selectedSummary!.holdings : [];
           this.loadingHoldings = false;
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.loadingHoldings = false;
           this.holdingsError = err?.error?.message || err?.message || 'Failed to load holdings';
+          this.cdr.detectChanges();
         }
       })
     );
+  }
+
+  private startPricePolling(portfolioId: number): void {
+    this.stopPricePolling();
+
+    this.pricePollingSub = interval(5000)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.portfolioService.getPortfolioByPortfolioId(portfolioId))
+      )
+      .subscribe({
+        next: (res) => {
+          this.selectedSummary = res?.data || null;
+          this.holdings = Array.isArray(this.selectedSummary?.holdings) ? [...this.selectedSummary!.holdings] : [];
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          // Ignore transient polling errors; user can still manually refresh by re-opening or using Refresh
+        }
+      });
+  }
+
+  private stopPricePolling(): void {
+    if (this.pricePollingSub) {
+      this.pricePollingSub.unsubscribe();
+      this.pricePollingSub = null;
+    }
   }
 
   formatCurrency(value?: number): string {

@@ -26,4 +26,14 @@ public class MarketClient {
     public void add(Long companyId, Long qty) {
         restTemplate.postForObject(BASE_URL + "/sell?companyId=" + companyId + "&qty=" + qty, null, String.class);
     }
+
+    // rollback for reduce
+public void rollbackReduce(Long companyId, Long qty) {
+    add(companyId, qty);
+}
+
+// rollback for add
+public void rollbackAdd(Long companyId, Long qty) {
+    reduce(companyId, qty);
+}
 }
